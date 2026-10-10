@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yusuf Malik Durmus</title>
+<meta name="description" content="Projects in reinforcement learning, machine learning and software engineering by Yusuf Malik Durmus, M.Sc. student at TUM.">
+<meta property="og:title" content="Yusuf Malik Durmus">
+<meta property="og:description" content="Projects in reinforcement learning, machine learning and software engineering.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+  :root {
+    --bg: #f7f8f7;
+    --surface: #ffffff;
+    --ink: #1b1f24;
+    --muted: #5a636e;
+    --line: #e0e4e8;
+    --accent: #1f5f8b;
+    --tag-bg: #eef2f5;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131619; --surface: #1a1e23; --ink: #e6e9ed; --muted: #9ba5b0;
+      --line: #2b3139; --accent: #84b6dd; --tag-bg: #222830;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 17.5px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  .page { max-width: 800px; margin: 0 auto; padding: 64px 24px 56px; }
+
+  header h1 { font-family: var(--serif); font-weight: 600; font-size: 40px; line-height: 1.15; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header .role { color: var(--muted); font-size: 18px; margin: 0 0 18px; }
+  header .intro { margin: 0 0 18px; max-width: 62ch; }
+  .links { display: flex; flex-wrap: wrap; gap: 6px 20px; margin: 0; padding: 0; list-style: none; font-weight: 600; }
+
+  h2 { font-family: var(--serif); font-weight: 600; font-size: 24px; margin: 56px 0 18px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+
+  .project { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; padding: 26px 0; border-bottom: 1px solid var(--line); }
+  .project:last-of-type { border-bottom: 0; }
+  .project.text-only { grid-template-columns: minmax(0, 1fr); }
+  .project h3 { font-size: 20px; font-weight: 700; margin: 0 0 2px; line-height: 1.3; }
+  .project .meta { color: var(--muted); font-size: 15.5px; margin: 0 0 10px; }
+  .project p { margin: 0 0 10px; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 10px; padding: 0; list-style: none; }
+  .tags li { background: var(--tag-bg); color: var(--muted); font-size: 14px; padding: 2px 9px; border-radius: 4px; }
+  .project .actions { display: flex; flex-wrap: wrap; gap: 4px 18px; font-weight: 600; font-size: 16px; margin: 0; padding: 0; list-style: none; }
+  .project figure { margin: 4px 0 0; }
+  .project figure img, .project figure video { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+  .project figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; line-height: 1.45; }
+
+  .rows { margin: 0; padding: 0; list-style: none; }
+  .rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .rows li:last-child { border-bottom: 0; }
+  .rows .what { font-weight: 600; }
+  .rows .where { color: var(--muted); }
+  .rows .when { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .rows .detail { grid-column: 1 / -1; font-size: 16px; color: var(--ink); margin-top: 2px; }
+
+  .skills { margin: 0; display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 8px 20px; }
+  .skills dt { color: var(--muted); }
+  .skills dd { margin: 0; }
+
+  footer { margin-top: 56px; color: var(--muted); font-size: 14.5px; }
+
+  @media (max-width: 680px) {
+    .page { padding-top: 40px; }
+    header h1 { font-size: 32px; }
+    .project { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .project figure { order: -1; max-width: 420px; }
+    .skills { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .skills dd { margin-bottom: 10px; }
+    .rows li { grid-template-columns: minmax(0, 1fr); }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <header>
+    <h1>Yusuf Malik Durmus</h1>
+    <p class="role">M.Sc. student in Robotics, Cognition, Intelligence at TUM · B.Sc. Computer Science &amp; Statistics, LMU Munich</p>
+    <p class="intro">I work on reinforcement learning and the software around it: preference learning, training pipelines on GPU clusters, simulation, and the tooling that makes experiments reproducible.</p>
+    <ul class="links">
+      <li><a href="mailto:malikdurmus2@gmail.com">malikdurmus2@gmail.com</a></li>
+      <li><a href="https://github.com/malikdurmus">GitHub</a></li>
+      <li><a href="https://linkedin.com/in/malik-durmus">LinkedIn</a></li>
+    </ul>
+  </header>
+
+  <h2>Projects</h2>
+
+  <article class="project">
+    <div>
+      <h3>Preference-Guided Curriculum Discovery for Robust RL</h3>
+      <p class="meta">Bachelor's thesis · LMU Munich, Chair of Mobile and Distributed Systems · 2026</p>
+      <p>Reinforcement learning agents generalize better when they train on well-chosen environments. I used an LLM (Gemini) to compare about 88,000 pairs of rendered levels by difficulty, validated the labels against human judgment, and trained a neural network ensemble that ranks new levels.</p>
+      <p>I then extended a state-of-the-art curriculum algorithm (Sampling for Learnability) with this difficulty model, new selection rules and an adaptive difficulty target, and evaluated it in about 200 GPU-accelerated training runs with paired statistical tests.</p>
+      <ul class="tags"><li>JAX / Flax</li><li>Reinforcement learning</li><li>Preference learning</li><li>Gemini on Vertex AI</li><li>Slurm</li></ul>
+      <ul class="actions">
+        <li><a href="https://malikdurmus.github.io/thesis-page/">Project report</a></li>
+        <li><a href="https://github.com/malikdurmus/research-portfolio/blob/main/Preference%20Guided%20Curriculum%20Discovery.pdf">Thesis (PDF)</a></li>
+        <li><a href="https://github.com/malikdurmus/sampling-for-learnability">Code</a></li>
+      </ul>
+    </div>
+    <figure>
+      <img src="assets/thesis-levels.png" width="1150" height="823" alt="Six maze-like navigation levels: the top row is ranked easy by the learned model, open maps with the goal close to the start; the bottom row is ranked hard, cluttered maps with long routes.">
+      <figcaption>Levels ranked by the learned difficulty model: easiest (top) and hardest (bottom), with start and goal marked.</figcaption>
+    </figure>
+  </article>
+
+  <article class="project">
+    <div>
+      <h3>RLHF-Gym: Reinforcement Learning from Human Feedback</h3>
+      <p class="meta">University software engineering project · LMU Munich · 2023–2024 · Grade 1.0</p>
+      <p>A complete pipeline that teaches robotic agents in MuJoCo from human preferences instead of a hand-written reward. I led the algorithm work: implementations of PEBBLE and SURF on top of Soft Actor-Critic, a learned reward model with semi-supervised learning and data augmentation, and ensemble-based query selection.</p>
+      <p>The project includes a web interface where people compare two agent videos, a thread-safe backend that feeds their answers into training, and training jobs on the university Slurm cluster.</p>
+      <ul class="tags"><li>PyTorch</li><li>SAC</li><li>Flask</li><li>MuJoCo</li><li>Slurm</li></ul>
+      <ul class="actions">
+        <li><a href="https://github.com/malikdurmus/RLHF-Gym">Code</a></li>
+      </ul>
+    </div>
+    <figure>
+      <video src="assets/rlhf-demo.mp4" poster="assets/rlhf-demo.jpg" width="800" height="434" autoplay muted loop playsinline aria-label="Recording of the feedback interface: two agent videos side by side, the user picks the better one."></video>
+      <figcaption>The feedback interface: a person picks the better of two agent behaviours.</figcaption>
+    </figure>
+  </article>
+
+  <article class="project text-only">
+    <div>
+      <h3>Inferno Swarm: Autonomous Multi-Agent Simulation</h3>
+      <p class="meta">Personal project · 2025</p>
+      <p>A C++17 simulation of autonomous agents with emergent swarm behaviour. I implemented the steering behaviours (separation, alignment, cohesion) and force accumulation from scratch, and a cellular-automaton environment in which fire spreads and agents switch between flocking and extinguishing.</p>
+      <ul class="tags"><li>C++17</li><li>SFML</li><li>CMake / vcpkg</li></ul>
+    </div>
+  </article>
+
+  <article class="project text-only">
+    <div>
+      <h3>Supermasks in Superposition: Continual Learning</h3>
+      <p class="meta">Scientific seminar paper · LMU Munich · Grade 1.0</p>
+      <p>A term paper analysing how a single fixed network can learn many tasks in sequence without forgetting, by selecting task-specific subnetworks instead of changing weights.</p>
+      <ul class="actions">
+        <li><a href="https://github.com/malikdurmus/research-portfolio/blob/main/Yusuf_Durmus_final_Seminararbeit.pdf">Paper (PDF)</a></li>
+      </ul>
+    </div>
+  </article>
+
+  <h2>Experience</h2>
+  <ul class="rows">
+    <li>
+      <span><span class="what">Working Student, Software Development (DevOps)</span> · <span class="where">SupplyOn AG, Munich</span></span>
+      <span class="when">2023–2025</span>
+      <span class="detail">Implemented and tested technical user stories in a DevOps team, working in Agile Scrum with continuous delivery.</span>
+    </li>
+    <li>
+      <span><span class="what">Working Student, IT Support</span> · <span class="where">DJI e.V., Munich</span></span>
+      <span class="when">2023</span>
+    </li>
+    <li>
+      <span><span class="what">Export Sales &amp; IT Automation</span> · <span class="where">Arm Aluminyum, Istanbul</span></span>
+      <span class="when">2020–2022</span>
+      <span class="detail">Wrote Python automation for marketing and internal workflows; grew the export share from 10% to 25%.</span>
+    </li>
+  </ul>
+
+  <h2>Education</h2>
+  <ul class="rows">
+    <li>
+      <span><span class="what">M.Sc. Robotics, Cognition, Intelligence</span> · <span class="where">Technical University of Munich</span></span>
+      <span class="when">since 2026</span>
+    </li>
+    <li>
+      <span><span class="what">B.Sc. Computer Science &amp; Statistics</span> · <span class="where">LMU Munich</span></span>
+      <span class="when">2022–2026</span>
+    </li>
+  </ul>
+
+  <h2>Skills</h2>
+  <dl class="skills">
+    <dt>Machine learning</dt><dd>Reinforcement learning, deep learning, preference learning; PyTorch, JAX / Flax, NumPy</dd>
+    <dt>Languages</dt><dd>Python, Java, SQL, C++, JavaScript</dd>
+    <dt>Infrastructure</dt><dd>Slurm, Docker, Git, Linux, cloud GPUs, Weights &amp; Biases</dd>
+    <dt>Spoken</dt><dd>German, Turkish (native); English (C2)</dd>
+  </dl>
+
+  <footer>Updated October 2026</footer>
+</main>
+<script>
+  // Respect reduced-motion preferences: keep the demo video paused on its poster frame.
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('video[autoplay]').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; });
+  }
+</script>
+</body>
+</html>
