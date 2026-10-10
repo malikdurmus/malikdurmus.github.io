@@ -70,6 +70,30 @@
 
   footer { margin-top: 56px; color: var(--muted); font-size: 14.5px; }
 
+  .print-only { display: none; }
+  @media print {
+    @page { size: A4; margin: 14mm 15mm; }
+    :root { --bg: #ffffff; --surface: #ffffff; --ink: #1b1f24; --muted: #555e69; --line: #dfe3e7; --accent: #1f5f8b; --tag-bg: #eef2f5; }
+    body { font-size: 10.5pt; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { max-width: none; padding: 0; }
+    header h1 { font-size: 24pt; }
+    header .role { font-size: 11pt; margin-bottom: 8px; }
+    header .intro { margin-bottom: 8px; }
+    h2 { font-size: 14pt; margin: 18px 0 8px; break-after: avoid; }
+    .project { grid-template-columns: minmax(0, 1fr) 210px; gap: 18px; padding: 12px 0; break-inside: avoid; }
+    .project h3 { font-size: 12pt; }
+    .project .meta, .project figcaption { font-size: 9pt; }
+    .tags { margin: 6px 0; }
+    .tags li { font-size: 8.5pt; }
+    .project .actions { font-size: 10pt; }
+    .rows li { padding: 5px 0; break-inside: avoid; }
+    .rows .detail { font-size: 10pt; }
+    .skills { grid-template-columns: 150px minmax(0, 1fr); gap: 3px 16px; }
+    .skills dt, .skills dd { font-size: 10pt; }
+    video { display: none !important; }
+    .print-only { display: block; }
+    footer { display: none; }
+  }
   @media (max-width: 680px) {
     .page { padding-top: 40px; }
     header h1 { font-size: 32px; }
@@ -92,6 +116,7 @@
       <li><a href="mailto:malikdurmus2@gmail.com">malikdurmus2@gmail.com</a></li>
       <li><a href="https://github.com/malikdurmus">GitHub</a></li>
       <li><a href="https://linkedin.com/in/malik-durmus">LinkedIn</a></li>
+      <li class="print-only"><a href="https://malikdurmus.github.io">malikdurmus.github.io</a></li>
     </ul>
   </header>
 
@@ -128,6 +153,7 @@
       </ul>
     </div>
     <figure>
+      <img class="print-only" src="assets/rlhf-demo.jpg" width="800" height="434" alt="The feedback interface: two agent videos side by side.">
       <video src="assets/rlhf-demo.mp4" poster="assets/rlhf-demo.jpg" width="800" height="434" autoplay muted loop playsinline aria-label="Recording of the feedback interface: two agent videos side by side, the user picks the better one."></video>
       <figcaption>The feedback interface: a person picks the better of two agent behaviours.</figcaption>
     </figure>
