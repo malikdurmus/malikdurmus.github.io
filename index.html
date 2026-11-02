@@ -55,6 +55,12 @@
   .project figure { margin: 4px 0 0; }
   .project figure img, .project figure video { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
   .project figcaption { color: var(--muted); font-size: 14px; margin-top: 6px; line-height: 1.45; }
+  .project code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-size: 0.88em; background: var(--tag-bg); padding: 1px 5px; border-radius: 3px; }
+  .snippet { font-family: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace; font-size: 12.5px; line-height: 1.5; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 10px 12px; margin: 0 0 6px; white-space: pre-wrap; word-break: break-word; }
+  .snippet code { background: none; padding: 0; font-size: inherit; }
+  .snippet.out { background: var(--tag-bg); color: var(--muted); }
+  .snippet .bad { color: #a3342b; font-weight: 600; }
+  @media (prefers-color-scheme: dark) { .snippet .bad { color: #e8877e; } }
 
   .rows { margin: 0; padding: 0; list-style: none; }
   .rows li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; padding: 10px 0; border-bottom: 1px solid var(--line); }
@@ -138,6 +144,29 @@
     <figure>
       <img src="assets/thesis-levels.png" width="1150" height="823" alt="Six maze-like navigation levels: the top row is ranked easy by the learned model, open maps with the goal close to the start; the bottom row is ranked hard, cluttered maps with long routes.">
       <figcaption>Levels ranked by the learned difficulty model: easiest (top) and hardest (bottom), with start and goal marked.</figcaption>
+    </figure>
+  </article>
+
+  <article class="project">
+    <div>
+      <h3>jax-keyguard: Catching PRNG Key Reuse in JAX</h3>
+      <p class="meta">Open-source Python package · Personal project · 2026</p>
+      <p>In JAX, reusing a random key silently repeats the same "random" numbers. I built a tool that finds this mistake in two ways: a static checker that follows keys through branches, loops and aliases without running the code, and a runtime check that raises an error the moment a key is reused.</p>
+      <p>It covers the older <code>PRNGKey</code> keys that JAX's own check skips. Run on the JAX repository, it found an example program that draws every layer's weights and biases from the same key.</p>
+      <ul class="tags"><li>Python</li><li>JAX</li><li>Static analysis</li><li>pytest / flake8 plugins</li><li>PyPI</li></ul>
+      <ul class="actions">
+        <li><a href="jax-keyguard/">Project report</a></li>
+        <li><a href="https://pypi.org/project/jax-keyguard/">PyPI</a></li>
+      </ul>
+    </div>
+    <figure>
+<pre class="snippet"><code>rng = jax.random.PRNGKey(0)
+w = jax.random.normal(rng, (m, n))
+b = jax.random.normal(<span class="bad">rng</span>, (n,))</code></pre>
+<pre class="snippet out"><code>KG001 PRNG key 'rng' reused:
+already consumed by
+jax.random.normal on line 173</code></pre>
+      <figcaption>The reuse it found in JAX's own MNIST example.</figcaption>
     </figure>
   </article>
 
@@ -230,7 +259,7 @@
     <dt>Spoken</dt><dd>German, Turkish (native); English (C2)</dd>
   </dl>
 
-  <footer>Updated October 2026</footer>
+  <footer>Updated November 2026</footer>
 </main>
 <script>
   // Respect reduced-motion preferences: keep the demo video paused on its poster frame.

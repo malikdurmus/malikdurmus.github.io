@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>jax-keyguard · Yusuf Malik Durmus</title>
+<meta name="description" content="jax-keyguard finds PRNG key reuse in JAX code, by reading the source or while it runs. Project report by Yusuf Malik Durmus.">
+<meta property="og:title" content="jax-keyguard: catching PRNG key reuse in JAX">
+<meta property="og:description" content="A static checker and a runtime check for JAX PRNG key reuse, including the legacy PRNGKey keys that JAX's own check skips.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
+<style>
+  :root {
+    --bg: #f7f8f7;
+    --surface: #ffffff;
+    --ink: #1b1f24;
+    --muted: #5a636e;
+    --line: #e0e4e8;
+    --accent: #1f5f8b;
+    --tag-bg: #eef2f5;
+    --bad: #a3342b;
+    --good: #2c6e3f;
+    --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+    --sans: "Source Sans 3", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #131619; --surface: #1a1e23; --ink: #e6e9ed; --muted: #9ba5b0;
+      --line: #2b3139; --accent: #84b6dd; --tag-bg: #222830;
+      --bad: #e8877e; --good: #86c79a;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); font-size: 17.5px; line-height: 1.6; }
+  a { color: var(--accent); text-underline-offset: 2px; text-decoration-thickness: 1px; }
+  a:hover { text-decoration-thickness: 2px; }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  .page { max-width: 800px; margin: 0 auto; padding: 48px 24px 56px; }
+
+  .back { display: inline-block; font-weight: 600; font-size: 16px; margin-bottom: 28px; }
+  header h1 { font-family: var(--serif); font-weight: 600; font-size: 38px; line-height: 1.15; margin: 0 0 6px; letter-spacing: -0.01em; }
+  header .meta { color: var(--muted); font-size: 16px; margin: 0 0 16px; }
+  header .lede { font-size: 19px; margin: 0 0 16px; max-width: 64ch; }
+  .actions { display: flex; flex-wrap: wrap; gap: 4px 18px; font-weight: 600; font-size: 16px; margin: 0; padding: 0; list-style: none; }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .tags li { background: var(--tag-bg); color: var(--muted); font-size: 14px; padding: 2px 9px; border-radius: 4px; }
+
+  h2 { font-family: var(--serif); font-weight: 600; font-size: 24px; margin: 52px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+  h3 { font-size: 18.5px; font-weight: 700; margin: 26px 0 6px; }
+  p { margin: 0 0 12px; max-width: 70ch; }
+  ul.plain { margin: 0 0 12px; padding-left: 22px; max-width: 70ch; }
+  ul.plain li { margin-bottom: 4px; }
+
+  code { font-family: var(--mono); font-size: 0.88em; background: var(--tag-bg); padding: 1px 5px; border-radius: 3px; }
+  pre { font-family: var(--mono); font-size: 14px; line-height: 1.55; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; margin: 6px 0 6px; overflow-x: auto; }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  pre .c { color: var(--muted); }
+  pre .bad { color: var(--bad); font-weight: 600; }
+  pre .good { color: var(--good); font-weight: 600; }
+  pre.out { background: var(--tag-bg); white-space: pre-wrap; word-break: break-word; }
+  .label { color: var(--muted); font-size: 14px; margin: 14px 0 0; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .compare > div { min-width: 0; }
+  .compare pre { font-size: 13px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 16px; margin: 6px 0 12px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 600; color: var(--muted); }
+  td.no { color: var(--bad); font-weight: 600; }
+  td.yes { color: var(--good); font-weight: 600; }
+
+  .facts { margin: 0; display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 8px 20px; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; }
+
+  footer { margin-top: 56px; color: var(--muted); font-size: 14.5px; }
+
+  @media (max-width: 680px) {
+    .page { padding-top: 32px; }
+    header h1 { font-size: 30px; }
+    .compare { grid-template-columns: minmax(0, 1fr); }
+    .facts { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .facts dd { margin-bottom: 10px; }
+    pre { font-size: 13px; }
+  }
+  @media print {
+    @page { size: A4; margin: 12mm 14mm; }
+    :root { --bg: #ffffff; --surface: #ffffff; --ink: #1b1f24; --muted: #555e69; --line: #dfe3e7; --accent: #1f5f8b; --tag-bg: #eef2f5; --bad: #a3342b; --good: #2c6e3f; }
+    body { font-size: 10.5pt; line-height: 1.45; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .page { max-width: none; padding: 0; }
+    .back { display: none; }
+    h2 { font-size: 14pt; margin: 16px 0 6px; break-after: avoid; }
+    pre { font-size: 8.5pt; white-space: pre-wrap; break-inside: avoid; }
+    footer { display: none; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+
+  <a class="back" href="../">← Yusuf Malik Durmus</a>
+
+  <header>
+    <h1>jax-keyguard</h1>
+    <p class="meta">Open-source Python package · Personal project · 2026</p>
+    <p class="lede">A tool that catches PRNG key reuse in JAX code, a mistake that makes "random" numbers silently repeat. It finds the mistake by reading the source, or while the code runs, and it covers the older <code>PRNGKey</code> keys that JAX's own check skips.</p>
+    <ul class="actions">
+      <li><a href="https://pypi.org/project/jax-keyguard/">PyPI package</a></li>
+    </ul>
+    <ul class="tags"><li>Python</li><li>JAX</li><li>Static analysis (ast)</li><li>pytest plugin</li><li>flake8 plugin</li></ul>
+  </header>
+
+  <h2>The problem</h2>
+  <p>JAX has no global random state. Every random function takes an explicit key, and the same key always gives the same numbers. To get new numbers you have to <em>split</em> the key and use each part once. Forgetting to split is easy, and nothing warns you: the code runs and the output looks plausible.</p>
+
+  <div class="compare">
+    <div>
+      <p class="label">Bug: both get the same random numbers</p>
+<pre><code>def init(key):
+    w = jax.random.normal(key, (3, 3))
+    b = jax.random.normal(<span class="bad">key</span>, (3,))
+    return w, b</code></pre>
+    </div>
+    <div>
+      <p class="label">Fix: split first, use each subkey once</p>
+<pre><code>def init(key):
+    <span class="good">w_key, b_key</span> = jax.random.split(key)
+    w = jax.random.normal(w_key, (3, 3))
+    b = jax.random.normal(b_key, (3,))
+    return w, b</code></pre>
+    </div>
+  </div>
+
+  <h3>Why JAX's own check isn't enough</h3>
+  <p>JAX 0.4.26 added a <code>jax_debug_key_reuse</code> option. I tested what it actually catches:</p>
+  <table>
+    <thead><tr><th>JAX version</th><th>Keys from <code>jax.random.key</code></th><th>Keys from <code>jax.random.PRNGKey</code></th></tr></thead>
+    <tbody>
+      <tr><td>before 0.4.26</td><td class="no">no check</td><td class="no">no check</td></tr>
+      <tr><td>0.4.26 to 0.12 (latest)</td><td class="yes">caught</td><td class="no">not caught</td></tr>
+    </tbody>
+  </table>
+  <p><code>PRNGKey</code> is the older kind of key, but it still works in the latest JAX and is used in most existing code and tutorials. jax-keyguard checks both kinds on any JAX version from 0.4.18 on, and its static checker doesn't depend on the JAX version at all.</p>
+
+  <h2>Two ways to check</h2>
+
+  <h3>1. Static checker: reads the code, never runs it</h3>
+  <p>Run it on a file or a directory, or use it as a flake8 plugin. Because the code isn't executed, it also checks functions under <code>jax.jit</code>, and it can run in CI with no GPU and no test data. Given a file containing the buggy <code>init</code> above and a jitted dropout function that splits its key and then uses the original anyway:</p>
+<pre class="out"><code>$ jax-keyguard src/
+src/model.py:6:27: KG001 PRNG key 'key' reused: already consumed by jax.random.normal on line 5; split it first
+src/model.py:13:33: KG001 PRNG key 'key' reused: already consumed by jax.random.split on line 12; split it first</code></pre>
+  <p>It exits with status 1 when it finds something, so a CI job fails on reuse. Lines can be silenced with <code># noqa</code>.</p>
+
+  <h3>2. Runtime check: raises an error the moment a key is reused</h3>
+  <p>Add <code>--keyguard</code> to pytest, or call <code>jax_keyguard.enable()</code> in a script. The error names the line that used the key first:</p>
+<pre class="out"><code>$ pytest --keyguard
+E   jax_keyguard.runtime.KeyReuseError: jax.random.normal received a PRNG key that was already consumed by jax.random.normal at tests/test_model.py:5. Split the key and use each subkey only once.
+FAILED tests/test_model.py::test_init</code></pre>
+  <p>This catches cases the static checker can't see, such as keys passed through your own helper functions or stored in containers. The two complement each other.</p>
+
+  <h2>Found in JAX's own repository</h2>
+  <p>I ran the static checker on the JAX repository (1,075 Python files, about 28 seconds). In one of JAX's example programs, <code>jax2tf/examples/mnist_lib.py</code>, it reports this:</p>
+<pre><code>rng = jax.random.PRNGKey(0)
+params = [(param_scale * jax.random.normal(rng, (m, n)),
+           param_scale * jax.random.normal(<span class="bad">rng</span>, (n,)))
+          for m, n, in zip(layer_sizes[:-1], layer_sizes[1:])]</code></pre>
+<pre class="out"><code>mnist_lib.py:173:48: KG001 PRNG key 'rng' reused: already consumed by jax.random.normal in a previous iteration; split it first
+mnist_lib.py:174:48: KG001 PRNG key 'rng' reused: already consumed by jax.random.normal on line 173; split it first</code></pre>
+  <p>The weights and the biases of every layer are drawn from the same key, so every layer starts with the same values. The code uses <code>PRNGKey</code>, so JAX's own <code>jax_debug_key_reuse</code> would not have caught it even if it had been turned on. Most of the other reports were in JAX's test files, some of them on purpose, such as the tests for JAX's own reuse check.</p>
+
+  <h2>How the static checker works</h2>
+  <p>It parses each file with Python's <code>ast</code> module and follows every variable that holds a key through each function, the way a compiler tracks values:</p>
+  <ul class="plain">
+    <li><strong>What counts as a key:</strong> anything returned by <code>key</code>, <code>PRNGKey</code>, <code>split</code> or <code>fold_in</code>, copies like <code>k2 = key</code>, loop variables over split keys, and function parameters that are passed to <code>jax.random</code>.</li>
+    <li><strong>Branches:</strong> the two sides of an <code>if</code> are checked separately and then merged, so using the key once in each branch is fine.</li>
+    <li><strong>Loops:</strong> the loop body is re-analyzed until nothing changes, which finds a key used again on the next iteration. <code>break</code>, <code>continue</code>, <code>try</code>/<code>finally</code>, <code>with</code> and <code>match</code> are handled too.</li>
+    <li><strong>Imports:</strong> <code>import jax.random as jr</code>, <code>from jax import random</code> and <code>from jax.random import normal</code> are all recognized.</li>
+  </ul>
+
+  <h3>What it deliberately leaves out</h3>
+  <p>A checker that raises many false alarms gets turned off, so it only reports what it can be sure of. It doesn't follow keys into your own helper functions, because those often call <code>fold_in</code>, which is safe. It also doesn't track keys stored in attributes or lists. The runtime check covers these cases for code that runs.</p>
+
+  <h2>Testing and results</h2>
+  <dl class="facts">
+    <dt>Test suite</dt><dd>101 tests, covering both checkers and the pytest plugin</dd>
+    <dt>Python versions</dt><dd>3.10, 3.11, 3.12 and 3.13</dd>
+    <dt>JAX versions</dt><dd>0.4.18 up to 0.12</dd>
+    <dt>Runtime cost</dt><dd>About twice as slow for random calls with checking on, so it's meant for tests and debugging rather than full training runs</dd>
+    <dt>Dependencies</dt><dd>Only JAX. The static checker doesn't even import it.</dd>
+  </dl>
+
+  <h2>Try it</h2>
+<pre><code>pip install jax-keyguard
+
+jax-keyguard src/          <span class="c"># static check</span>
+pytest --keyguard          <span class="c"># runtime check in tests</span></code></pre>
+
+  <footer>Updated November 2026 · <a href="../">Back to all projects</a></footer>
+</main>
+</body>
+</html>
