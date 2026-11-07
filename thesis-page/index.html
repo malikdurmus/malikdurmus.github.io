@@ -31,6 +31,7 @@
   a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
   a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .page { max-width: 760px; margin: 0 auto; padding: 56px 24px 72px; }
+  .back { display: inline-block; font-family: var(--font-mono); font-size: 12.5px; margin: 0 0 22px; }
   .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
   h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(30px, 5vw, 42px); line-height: 1.15; letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
   .lede { font-size: 18px; color: var(--ink-2); margin: 0 0 32px; max-width: 62ch; }
@@ -73,6 +74,7 @@
 </head>
 <body>
 <main class="page">
+  <a class="back" href="../">← Yusuf Malik Durmus</a>
   <p class="eyebrow">Project report · Bachelor's thesis in Computer Science</p>
   <h1>Preference-Guided Curriculum Discovery for Robust Reinforcement Learning</h1>
   <p class="lede">I trained a network to order game levels by difficulty from an LLM's pairwise judgments and used it to guide the training curriculum of a reinforcement learning agent. The learned ordering is informative. Whether it helps the curriculum depends on how the training loop uses it.</p>
