@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tumor Classification Under Hospital Shift</title>
+<meta name="description" content="Project report: a tumor classifier for lymph node histology patches, tested on a hospital it has never seen, with an in-browser demo.">
+<meta property="og:title" content="Tumor Classification Under Hospital Shift">
+<meta property="og:description" content="Project report: a tumor classifier for lymph node histology patches, tested on a hospital it has never seen, with an in-browser demo.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --ink: #17202a; --ink-2: #4a5563; --ink-3: #7b8695; --line: #dde2e8;
+    --sfl: #0077BB; --la: #009988; --prior: #EE7733; --dr: #9aa3ad; --accent: #0077BB; --accent-soft: #e3eef7;
+    --warn-soft: #fbeee4;
+    --font-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+    --font-body: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f141a; --surface: #161d25; --ink: #e6eaf0; --ink-2: #b3bcc7; --ink-3: #7f8a97;
+      --line: #2a3441; --accent: #4aa3e0; --accent-soft: #16283a; --dr: #6c7680; --warn-soft: #2c2018;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0f141a; --surface: #161d25; --ink: #e6eaf0; --ink-2: #b3bcc7; --ink-3: #7f8a97;
+    --line: #2a3441; --accent: #4aa3e0; --accent-soft: #16283a; --dr: #6c7680; --warn-soft: #2c2018;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .page { max-width: 760px; margin: 0 auto; padding: 40px 24px 72px; }
+  .back { display: inline-block; font-family: var(--font-mono); font-size: 12.5px; margin: 0 0 22px; }
+  .eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 14px; }
+  h1 { font-family: var(--font-display); font-weight: 500; font-size: clamp(30px, 5vw, 42px); line-height: 1.15; letter-spacing: -0.01em; margin: 0 0 12px; text-wrap: balance; }
+  .lede { font-size: 18px; color: var(--ink-2); margin: 0 0 32px; max-width: 62ch; }
+  .facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); margin: 0 0 28px; }
+  .facts > div { padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); }
+  .facts > div:nth-last-child(-n+2) { border-bottom: 0; }
+  .facts dt { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); margin: 0 0 4px; }
+  .facts dd { margin: 0; font-size: 15px; }
+  h2 { font-family: var(--font-display); font-weight: 500; font-size: 24px; line-height: 1.25; margin: 44px 0 12px; text-wrap: balance; }
+  h3 { font-family: var(--font-body); font-weight: 600; font-size: 15.5px; margin: 0 0 6px; }
+  p { margin: 0 0 14px; max-width: 68ch; }
+  .notice { background: var(--warn-soft); border-left: 3px solid var(--prior); border-radius: 4px; padding: 12px 16px; margin: 0 0 8px; font-size: 14.5px; }
+  .notice p { margin: 0; }
+  .takeaway { background: var(--accent-soft); border-radius: 4px; padding: 18px 20px; margin: 18px 0 8px; }
+  .takeaway p { margin: 0 0 10px; }
+  .takeaway p:last-child { margin: 0; }
+  figure { margin: 22px 0 8px; padding: 18px 18px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; overflow-x: auto; }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 13.5px; color: var(--ink-2); margin-top: 8px; max-width: 68ch; }
+  .tbl { overflow-x: auto; margin: 16px 0 6px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); font-weight: 500; }
+  tr.strong td { font-weight: 600; }
+  ul.findings { padding-left: 20px; margin: 0 0 14px; max-width: 68ch; }
+  ul.findings li { margin-bottom: 8px; }
+  .stack { font-family: var(--font-mono); font-size: 13px; color: var(--ink-2); line-height: 1.8; }
+  .foot { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--ink-3); }
+  .foot p { max-width: none; margin: 0 0 6px; }
+
+  .small { font-size: 13.5px; color: var(--ink-2); }
+  .aside { background: var(--warn-soft); border-left: 3px solid var(--prior); border-radius: 4px; padding: 10px 14px; font-size: 14.5px; }
+  .formula { font-family: var(--font-mono); font-size: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; display: inline-block; }
+  figure img.photo { display: block; width: 100%; height: auto; border-radius: 3px; }
+  .takeaway ul.findings { margin: 0; }
+
+  .toc { margin: 36px 0 8px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+  .toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 32px; font-size: 15px; }
+  .toc li { margin: 0 0 6px; break-inside: avoid; }
+  h2[id] { scroll-margin-top: 16px; }
+  @media (max-width: 560px) { .toc ol { columns: 1; } }
+
+  .demo { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 24px; margin: 18px 0 8px; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; }
+  .frame { position: relative; width: 100%; aspect-ratio: 1; border-radius: 3px; overflow: hidden; background: var(--line); }
+  .frame img { display: block; width: 100%; height: 100%; }
+  .frame .box { position: absolute; left: 33.33%; top: 33.33%; width: 33.33%; height: 33.33%; border: 1.5px dashed #fff; pointer-events: none; }
+  .switch { display: flex; gap: 6px; margin: 10px 0 0; }
+  .switch button, .run { font: 500 13px var(--font-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 5px 10px; cursor: pointer; }
+  .switch button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .result dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14.5px; }
+  .result dt { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding-top: 2px; }
+  .result dd { margin: 0; font-variant-numeric: tabular-nums; }
+  .prob { font-family: var(--font-display); font-size: 34px; line-height: 1.1; }
+  .bar { height: 8px; background: var(--line); border-radius: 4px; overflow: hidden; margin: 6px 0 16px; }
+  .bar > span { display: block; height: 100%; width: 0; background: var(--prior); transition: width 0.25s; }
+  .status { font-size: 13.5px; color: var(--ink-3); margin: 12px 0 0; }
+  .thumbs { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; margin: 14px 0 0; }
+  .thumbs button { padding: 0; border: 2px solid transparent; border-radius: 3px; background: none; cursor: pointer; aspect-ratio: 1; }
+  .thumbs button[aria-pressed="true"] { border-color: var(--accent); }
+  .thumbs img { display: block; width: 100%; height: 100%; border-radius: 2px; }
+  @media (max-width: 560px) {
+    .facts, .demo { grid-template-columns: 1fr; }
+    .facts > div:nth-last-child(-n+2) { border-bottom: 1px solid var(--line); }
+    .facts > div:last-child { border-bottom: 0; }
+    .thumbs { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <a class="back" href="../">← Yusuf Malik Durmus</a>
+  <p class="eyebrow">Project report · Personal computer vision project</p>
+  <h1>Tumor Classification Under Hospital Shift</h1>
+  <p class="lede">I trained a classifier that finds tumor tissue in lymph node histology patches, then measured how well it works at a hospital it has never seen. This is the story of how the project went: the plan, the engineering problems, the results, and the experiments that failed before one worked.</p>
+  <dl class="facts">
+    <div><dt>Author</dt><dd>Yusuf Malik Durmus</dd></div>
+    <div><dt>Data</dt><dd>Camelyon17-WILDS: 455,954 patches from 5 hospitals</dd></div>
+    <div><dt>Stack</dt><dd class="stack">Python · PyTorch · torchvision · Weights &amp; Biases · ONNX Runtime · onnxruntime-web</dd></div>
+    <div><dt>Code</dt><dd><a href="https://github.com/malikdurmus/tumor-classification">github.com/malikdurmus/tumor-classification</a></dd></div>
+  </dl>
+  <div class="notice"><p><strong>Research demo, not a medical tool.</strong> The model and the demo below are for learning about distribution shift. They must not be used for diagnosis.</p></div>
+
+  <h2 id="try-it">Try it</h2>
+  <p>Pick an image. The model runs in your browser as an 11 MB int8 network locally. The samples are random within each outcome (8 correct tumor, 8 correct no tumor, 4 missed tumors and 4 false positives) The dashed box marks the region that defines the label.</p>
+  <div class="demo">
+    <div>
+      <div class="frame"><img id="view" alt="Selected tissue patch"><div class="box"></div></div>
+      <div class="switch" role="group" aria-label="View">
+        <button type="button" id="show-patch" aria-pressed="true">Patch</button>
+        <button type="button" id="show-cam" aria-pressed="false">Grad-CAM</button>
+      </div>
+    </div>
+    <div class="result">
+      <div class="prob" id="prob">–</div>
+      <div class="bar"><span id="bar"></span></div>
+      <dl>
+        <dt>Prediction</dt><dd id="pred">–</dd>
+        <dt>True label</dt><dd id="truth">–</dd>
+        <dt>Outcome</dt><dd id="outcome">–</dd>
+        <dt>Python run</dt><dd id="expected">–</dd>
+        <dt>Time</dt><dd id="time">–</dd>
+      </dl>
+      <p class="status" id="status">Choose a patch to load the model (11 MB).</p>
+    </div>
+  </div>
+  <div class="thumbs" id="thumbs" aria-label="Sample patches"></div>
+  <p class="small" style="margin-top:10px">The probability is the model's estimate that the patch contains tumor. Grad-CAM shows where the evidence for the predicted class was; it was computed in advance from the float32 model.</p>
+
+  <nav class="toc" aria-label="Contents">
+    <p class="eyebrow">Contents</p>
+    <ol>
+      <li><a href="#try-it">Try it</a></li>
+      <li><a href="#the-question">The question</a></li>
+      <li><a href="#planning-before-training">Planning before training</a></li>
+      <li><a href="#making-the-data-fast-enough">Making the data fast enough</a></li>
+      <li><a href="#training-on-shared-machines">Training on shared machines</a></li>
+      <li><a href="#what-the-first-runs-taught-me">What the first runs taught me</a></li>
+      <li><a href="#results">Results</a></li>
+      <li><a href="#the-choice-of-validation-data-mattered-most">The choice of validation data mattered most</a></li>
+      <li><a href="#calibration">Calibration</a></li>
+      <li><a href="#looking-inside-the-model">Looking inside the model</a></li>
+      <li><a href="#a-second-architecture-center-and-context">A second architecture: center and context</a></li>
+      <li><a href="#making-it-small-enough-for-a-browser">Making it small enough for a browser</a></li>
+      <li><a href="#what-i-learned">What I learned</a></li>
+      <li><a href="#limits">Limits</a></li>
+      <li><a href="#last-words">Last words</a></li>
+    </ol>
+  </nav>
+
+  <div class="takeaway">
+    <p><strong>The short version.</strong></p>
+    <ul class="findings">
+      <li>Color augmentation closed most of the gap between known hospitals and the unseen one: hospital 2 accuracy rose by 7.5 points, and the model became far less overconfident.</li>
+      <li>Which validation data I chose settings on mattered more than any single setting. Choosing on an unseen hospital gave 92.8% on the test hospital; choosing on known hospitals gave 81.4%.</li>
+      <li>The model looks at the whole patch, not just the region that defines the label. A second architecture that separates the two did better on the test hospital, but only after two failed attempts, and I found it after seeing the test results.</li>
+    </ul>
+  </div>
+
+  <h2 id="the-question">The question</h2>
+  <p>Tissue slides look different from hospital to hospital. Staining, scanners and preparation all change the colors and textures a model sees, so a classifier trained on some hospitals can do much worse at a new one, even though the task is the same.</p>
+  <p>Camelyon17-WILDS makes this measurable. Each 96×96 patch comes from a lymph node slide and counts as tumor if its central 32×32 region contains tumor tissue. The hospitals are split so that two are never seen in training:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Split</th><th>Hospitals</th><th>Patches</th><th>Used for</th></tr></thead>
+    <tbody>
+      <tr><td>Train</td><td>0, 3, 4</td><td>302,436</td><td>Fitting the weights</td></tr>
+      <tr><td>ID validation</td><td>0, 3, 4</td><td>33,560</td><td>Measuring performance on known hospitals</td></tr>
+      <tr><td>Hospital 1</td><td>1</td><td>34,904</td><td>Choosing epochs, learning rates and augmentations</td></tr>
+      <tr><td>Hospital 2</td><td>2</td><td>85,054</td><td> Held out test set</td></tr>
+    </tbody>
+  </table></div>
+  <p>So, how large is the gap between known hospitals and an unseen hospital, and how much of it do augmentation and pretraining close?</p>
+
+  <h2 id="planning-before-training">Planning before training</h2>
+  <p>Before writing any training code, I  designed the experiments, because clarifying the training pipeline helps ensure there is no data leak.</p>
+  <p><strong>Two phases instead of a full grid.</strong> I fixed one network, a ResNet-18 at 96×96, and first compared three augmentations: none, geometric (flips and 90° rotations), and geometric plus color jitter. Then I took the best augmentation and compared ImageNet pretraining with training from scratch. This saved me running every combination, at the cost of assuming the best augmentation doesn't depend on pretraining.</p>
+  <p><strong>Every choice follows a rule written down in advance.</strong> The highest mean accuracy on hospital 1 wins. As a comparison, I ran the same pipeline with every choice made on ID validation instead, which is what you'd do without access to a second hospital. I'll call these option 1 (choose on ID validation) and option 2 (choose on hospital 1, the official pipeline).</p>
+  <p></p>
+
+  <h2 id="making-the-data-fast-enough">Making the data fast enough</h2>
+  <p>This experiment was run on LMU's compute cluster (Thanks to LMU for the CIP Pool!). The dataset is ~455k .PNG files, and the only storage big enough was a network file system. I timed a plain PyTorch data loader with 12 worker processes. It was able to load 42 patches per second ~two hours per epoch just to read the data. With 10 epochs and over a hundred planned runs, that would have taken weeks.</p>
+  <p>Unsurprisingly, network file system would become the bottleneck in the training loop. So I packed all patches once into a single 12.6 GB array of raw pixels. Each job copies that one file to the machine's local disk and opens it memory-mapped, so only the patches being read are loaded, and the worker processes share it.</p>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>PNGs on network storage</th><th>Packed file on local disk</th></tr></thead>
+    <tbody>
+      <tr><td>Reading speed</td><td>about 42 patches/s</td><td>about 1,540 patches/s, limited by the GPU</td></tr>
+      <tr><td>One epoch</td><td>about 2 hours (data only)</td><td>196 s, GPU about 97% busy</td></tr>
+      <tr><td>One 10-epoch run</td><td>about 20 hours</td><td>about 37 minutes</td></tr>
+    </tbody>
+  </table></div>
+  <p>I checked the packed array against the originals to test the arrays. Labels and hospitals matched the metadata for every patch, and pixels were identical.</p>
+
+  <h2 id="training-on-shared-machines">Training on shared machines</h2>
+  <p>The GPUs were on shared university machines, where a job pauses when someone logs in locally and every machine reboots at least once a week. So every run had to survive being killed. Each epoch saves a checkpoint, written to a temporary file and then renamed, so a crash during saving can't corrupt the previous one. A resubmitted job continues after the last finished epoch, and the random seed is derived from the run seed and the epoch number, so a resumed run shuffles and augments exactly as it would have. I tested this by killing a real job halfway through an epoch.</p>
+  <h2 id="what-the-first-runs-taught-me">What the first runs taught me</h2>
+  <p>The very first pipeline check already showed the pattern the whole project is about. Accuracy on known hospitals kept rising to 99.4% over 10 epochs, while accuracy on hospital 1 peaked at 89.4% in epoch 2 and then fell to about 83%. More training helped on the hospitals the model knew, and hurt on the one it didn't.</p>
+  <p>The learning rate search showed that smaller learning rates did steadily better on hospital 1, while ID validation barely moved:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Learning rate (pretrained)</th><th>1e-3</th><th>3e-4</th><th>1e-4</th><th>3e-5</th><th>1e-5</th></tr></thead>
+    <tbody>
+      <tr><td>Hospital 1, mean of 3 seeds</td><td>86.97</td><td>88.41</td><td>90.51</td><td>90.84</td><td><strong>90.88</strong></td></tr>
+      <tr><td>ID validation</td><td>99.42</td><td>99.46</td><td><strong>99.51</strong></td><td>99.33</td><td>98.94</td></tr>
+    </tbody>
+  </table></div>
+  <p>I had planned only the first three values, with a rule to add one more whenever the winner landed at the edge. It landed at the edge twice, so I extended to 3e-5 and then 1e-5 and stopped there as agreed in advance. The last two are tied, and the winner still sits at the edge of the tested range. The two selection rules also disagreed here. Hospital 1 picked 1e-5, ID validation picked 1e-4.</p>
+
+  <h2 id="results">Results</h2>
+  <p>Before comparing augmentations, I froze the color jitter strength by looking at augmented samples from the training hospitals only. Some looked unrealistic, but I kept the values, so phase 1 could measure whether it helps. On hospital 1, color jitter won clearly (93.74% against 91.49% for none and 90.68% for geometric), while on known hospitals it scored lowest (99.25% against 99.55%). In phase 2, training from scratch beat pretraining on hospital 1 by 0.03 points, so the official final pipeline was ResNet-18 from scratch, color jitter, learning rate 1e-3.</p>
+  <figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 368.0" role="img" aria-label="ID validation and hospital 2 accuracy for each pipeline">
+<circle cx="30.0" cy="16.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>ID validation</title></circle>
+<text x="42.0" y="20.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">ID validation (known hospitals)</text>
+<circle cx="300.0" cy="16.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Hospital 2</title></circle>
+<text x="312.0" y="20.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">Hospital 2 (unseen)</text>
+<line x1="291.1" y1="56.0" x2="291.1" y2="334.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="291.1" y="350.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">60</text>
+<line x1="373.3" y1="56.0" x2="373.3" y2="334.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="373.3" y="350.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">70</text>
+<line x1="455.6" y1="56.0" x2="455.6" y2="334.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="455.6" y="350.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">80</text>
+<line x1="537.8" y1="56.0" x2="537.8" y2="334.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="537.8" y="350.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">90</text>
+<line x1="620.0" y1="56.0" x2="620.0" y2="334.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="620.0" y="350.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">100</text>
+<text x="250.0" y="366.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">accuracy (%), mean of 10 seeds</text>
+<text x="0.0" y="48.0" font-size="11" text-anchor="start" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">OPTION 2 · CHOSEN ON HOSPITAL 1 (OFFICIAL)</text>
+<text x="0.0" y="204.0" font-size="11" text-anchor="start" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">OPTION 1 · CHOSEN ON ID VALIDATION</text>
+<text x="0.0" y="76.0" font-size="13" text-anchor="start" font-weight="400" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Pretrained, none</text>
+<line x1="470.3" y1="72.0" x2="610.1" y2="72.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="610.1" cy="72.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, none: ID validation 98.8%</title></circle>
+<circle cx="470.3" cy="72.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, none: hospital 2 81.8%</title></circle>
+<text x="460.3" y="76.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">81.8</text>
+<text x="0.0" y="106.0" font-size="13" text-anchor="start" font-weight="400" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Pretrained, geometric</text>
+<line x1="486.4" y1="102.0" x2="606.3" y2="102.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="606.3" cy="102.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, geometric: ID validation 98.3%</title></circle>
+<circle cx="486.4" cy="102.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, geometric: hospital 2 83.8%</title></circle>
+<text x="476.4" y="106.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">83.8</text>
+<text x="0.0" y="136.0" font-size="13" text-anchor="start" font-weight="400" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Pretrained, color jitter</text>
+<line x1="548.2" y1="132.0" x2="606.5" y2="132.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="606.5" cy="132.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, color jitter: ID validation 98.4%</title></circle>
+<circle cx="548.2" cy="132.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, color jitter: hospital 2 91.3%</title></circle>
+<text x="538.2" y="136.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">91.3</text>
+<text x="0.0" y="166.0" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Scratch, color jitter (official final)</text>
+<line x1="561.1" y1="162.0" x2="607.0" y2="162.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="607.0" cy="162.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Scratch, color jitter (official final): ID validation 98.4%</title></circle>
+<circle cx="561.1" cy="162.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Scratch, color jitter (official final): hospital 2 92.8%</title></circle>
+<text x="551.1" y="166.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">92.8</text>
+<text x="0.0" y="232.0" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Pretrained, none (option 1 final)</text>
+<line x1="466.8" y1="228.0" x2="616.3" y2="228.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="616.3" cy="228.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, none (option 1 final): ID validation 99.6%</title></circle>
+<circle cx="466.8" cy="228.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, none (option 1 final): hospital 2 81.4%</title></circle>
+<text x="456.8" y="232.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">81.4</text>
+<text x="0.0" y="262.0" font-size="13" text-anchor="start" font-weight="400" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Pretrained, geometric</text>
+<line x1="453.0" y1="258.0" x2="616.1" y2="258.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="616.1" cy="258.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, geometric: ID validation 99.5%</title></circle>
+<circle cx="453.0" cy="258.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, geometric: hospital 2 79.7%</title></circle>
+<text x="443.0" y="262.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">79.7</text>
+<text x="0.0" y="292.0" font-size="13" text-anchor="start" font-weight="400" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Pretrained, color jitter</text>
+<line x1="559.9" y1="288.0" x2="613.9" y2="288.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="613.9" cy="288.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, color jitter: ID validation 99.3%</title></circle>
+<circle cx="559.9" cy="288.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Pretrained, color jitter: hospital 2 92.7%</title></circle>
+<text x="549.9" y="292.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">92.7</text>
+<text x="0.0" y="322.0" font-size="13" text-anchor="start" font-weight="400" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Scratch, none</text>
+<line x1="301.7" y1="318.0" x2="614.6" y2="318.0" style="stroke:var(--line, #dde2e8)" stroke-width="3"/>
+<circle cx="614.6" cy="318.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Scratch, none: ID validation 99.3%</title></circle>
+<circle cx="301.7" cy="318.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Scratch, none: hospital 2 61.3%</title></circle>
+<text x="291.7" y="322.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">61.3</text>
+</svg>
+    <figcaption>Accuracy on known hospitals (ID validation) and on hospital 2 for each pipeline, mean of 10 seeds. Hover over a point for its value. The gap between the two dots is what the project tries to close.</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th>Pipeline</th><th>ID val.</th><th>Hospital 1</th><th>Hospital 2</th><th>Gap</th><th>ECE</th></tr></thead>
+    <tbody>
+      <tr><td>Pretrained, none</td><td>98.79</td><td>91.49</td><td>81.79 ± 2.59</td><td>17.0</td><td>12.8</td></tr>
+      <tr><td>Pretrained, geometric</td><td>98.33</td><td>90.68</td><td>83.75 ± 4.25</td><td>14.6</td><td>7.9</td></tr>
+      <tr><td>Pretrained, color jitter</td><td>98.36</td><td>93.74</td><td>91.27 ± 0.91</td><td>7.1</td><td>4.2</td></tr>
+      <tr class="strong"><td>Scratch, color jitter (final)</td><td>98.42</td><td>93.77</td><td>92.84 ± 2.06</td><td>5.6</td><td>4.2</td></tr>
+      <tr><td>Chosen on ID validation: pretrained, none</td><td>99.55</td><td>88.40</td><td>81.37 ± 2.17</td><td>18.2</td><td>17.0</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Accuracy in %, mean of 10 seeds, with the standard deviation on hospital 2. Hospital 1 numbers are optimistic, because hospital 1 also chose each run's best epoch.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Planned comparison on hospital 2</th><th>Difference</th><th>Seeds better</th><th>p</th><th>After Holm</th></tr></thead>
+    <tbody>
+      <tr><td>Geometric → color jitter</td><td>+7.51</td><td>10 / 10</td><td>0.002</td><td>significant</td></tr>
+      <tr><td>Chosen on ID validation → chosen on hospital 1</td><td>+11.47</td><td>10 / 10</td><td>0.002</td><td>significant</td></tr>
+      <tr><td>None → geometric</td><td>+1.96</td><td>7 / 10</td><td>0.084</td><td>not significant</td></tr>
+      <tr><td>Pretrained → scratch</td><td>+1.58</td><td>7 / 10</td><td>0.084</td><td>not significant</td></tr>
+    </tbody>
+  </table></div>
+  <p>Color jitter closed most of the gap: with pretraining, the distance between known hospitals and hospital 2 shrank from 17.0 to 7.1 points. Geometric augmentation and pretraining trend upward but aren't significant.</p>
+  <p>For context, the WILDS paper reports 70.3% ± 6.4 on the test hospital for a DenseNet-121 trained from scratch without augmentation, and leaderboard entries with stain color augmentation reach 91.6% and 92.1%. Their setups differ from mine, so these numbers are context, not a direct comparison.</p>
+
+  <h2 id="the-choice-of-validation-data-mattered-most">The choice of validation data mattered most</h2>
+  <p>The biggest effect in the project isn't a training setting. Option 1 rejected color jitter because it scored 0.3 points lower on known hospitals, and ended up with the most fragile pipeline. Every single seed did better when settings were chosen on hospital 1.</p>
+  <figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 376" role="img" aria-label="Hospital 2 accuracy per seed for option 1 and option 2">
+<line x1="120.0" y1="320.0" x2="520.0" y2="320.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="324.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">75</text>
+<line x1="120.0" y1="264.0" x2="520.0" y2="264.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="268.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">80</text>
+<line x1="120.0" y1="208.0" x2="520.0" y2="208.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="212.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">85</text>
+<line x1="120.0" y1="152.0" x2="520.0" y2="152.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="156.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">90</text>
+<line x1="120.0" y1="96.0" x2="520.0" y2="96.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="100.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">95</text>
+<line x1="120.0" y1="40.0" x2="520.0" y2="40.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="44.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">100</text>
+<line x1="200.0" y1="225.5" x2="440.0" y2="154.0" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="225.5" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 0, option 1: 83.4%</title></circle>
+<circle cx="440.0" cy="154.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 0, option 2: 89.8%</title></circle>
+<line x1="200.0" y1="248.2" x2="440.0" y2="109.9" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="248.2" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 1, option 1: 81.4%</title></circle>
+<circle cx="440.0" cy="109.9" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 1, option 2: 93.8%</title></circle>
+<line x1="200.0" y1="262.4" x2="440.0" y2="89.8" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="262.4" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 2, option 1: 80.1%</title></circle>
+<circle cx="440.0" cy="89.8" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 2, option 2: 95.5%</title></circle>
+<line x1="200.0" y1="235.2" x2="440.0" y2="114.3" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="235.2" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 3, option 1: 82.6%</title></circle>
+<circle cx="440.0" cy="114.3" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 3, option 2: 93.4%</title></circle>
+<line x1="200.0" y1="295.8" x2="440.0" y2="133.0" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="295.8" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 4, option 1: 77.2%</title></circle>
+<circle cx="440.0" cy="133.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 4, option 2: 91.7%</title></circle>
+<line x1="200.0" y1="255.5" x2="440.0" y2="125.7" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="255.5" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 5, option 1: 80.8%</title></circle>
+<circle cx="440.0" cy="125.7" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 5, option 2: 92.3%</title></circle>
+<line x1="200.0" y1="256.0" x2="440.0" y2="120.7" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="256.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 6, option 1: 80.7%</title></circle>
+<circle cx="440.0" cy="120.7" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 6, option 2: 92.8%</title></circle>
+<line x1="200.0" y1="208.9" x2="440.0" y2="119.5" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="208.9" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 7, option 1: 84.9%</title></circle>
+<circle cx="440.0" cy="119.5" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 7, option 2: 92.9%</title></circle>
+<line x1="200.0" y1="264.9" x2="440.0" y2="152.0" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="264.9" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 8, option 1: 79.9%</title></circle>
+<circle cx="440.0" cy="152.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 8, option 2: 90.0%</title></circle>
+<line x1="200.0" y1="233.7" x2="440.0" y2="82.8" style="stroke:var(--ink-3, #7b8695)" stroke-width="1.2"/>
+<circle cx="200.0" cy="233.7" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 9, option 1: 82.7%</title></circle>
+<circle cx="440.0" cy="82.8" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Seed 9, option 2: 96.2%</title></circle>
+<text x="184.0" y="252.6" font-size="13" text-anchor="end" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">mean 81.4</text>
+<text x="456.0" y="124.2" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">mean 92.8</text>
+<text x="200.0" y="348.0" font-size="13" text-anchor="middle" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Option 1</text>
+<text x="200.0" y="366.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">chosen on ID validation</text>
+<text x="440.0" y="348.0" font-size="13" text-anchor="middle" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Option 2</text>
+<text x="440.0" y="366.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">chosen on hospital 1</text>
+<text x="120.0" y="18.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">hospital 2 accuracy (%)</text>
+</svg>
+    <figcaption>Hospital 2 accuracy for each seed. Option 1 chose every setting on ID validation, option 2 on hospital 1. Each line connects the same seed.</figcaption>
+  </figure>
+  <p>The WILDS authors saw the same direction with a different network: their baseline reached 70.3% on the test hospital when tuned on the validation hospital and 65.8% when tuned on ID validation.</p>
+
+  <h2 id="calibration">Calibration</h2>
+  <p>A model is calibrated when its confidence matches how often it's right. Without augmentation, the pretrained model was confidently wrong on hospital 2: patches it rated 90% certain were right only 65% of the time. Color jitter brought the curve much closer to the diagonal.</p>
+  <figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 394" role="img" aria-label="Calibration on hospital 2 for no augmentation and color jitter">
+<line x1="70.0" y1="44.0" x2="70.0" y2="344.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="70.0" y="362.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.5</text>
+<line x1="70.0" y1="316.7" x2="600.0" y2="316.7" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="60.0" y="320.7" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.5</text>
+<line x1="176.0" y1="44.0" x2="176.0" y2="344.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="176.0" y="362.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.6</text>
+<line x1="70.0" y1="262.2" x2="600.0" y2="262.2" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="60.0" y="266.2" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.6</text>
+<line x1="282.0" y1="44.0" x2="282.0" y2="344.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="282.0" y="362.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.7</text>
+<line x1="70.0" y1="207.6" x2="600.0" y2="207.6" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="60.0" y="211.6" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.7</text>
+<line x1="388.0" y1="44.0" x2="388.0" y2="344.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="388.0" y="362.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.8</text>
+<line x1="70.0" y1="153.1" x2="600.0" y2="153.1" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="60.0" y="157.1" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.8</text>
+<line x1="494.0" y1="44.0" x2="494.0" y2="344.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="494.0" y="362.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.9</text>
+<line x1="70.0" y1="98.5" x2="600.0" y2="98.5" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="60.0" y="102.5" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">0.9</text>
+<line x1="600.0" y1="44.0" x2="600.0" y2="344.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="600.0" y="362.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">1.0</text>
+<line x1="70.0" y1="44.0" x2="600.0" y2="44.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="60.0" y="48.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">1.0</text>
+<line x1="70.0" y1="316.7" x2="600.0" y2="44.0" style="stroke:var(--ink-3, #7b8695)" stroke-width="1" stroke-dasharray="4 4"/>
+<text x="488.0" y="82.2" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">perfect calibration</text>
+<text x="335.0" y="384.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">confidence</text>
+<text x="70.0" y="22.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">accuracy</text>
+<polyline points="87.6,310.5 141.0,302.6 211.9,285.3 282.9,273.9 354.2,245.3 425.4,220.8 498.4,177.2 592.4,61.4" fill="none" style="stroke:var(--prior, #EE7733)" stroke-width="2"/>
+<circle cx="87.6" cy="310.5" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.52, accuracy 0.51, 0.8% of patches</title></circle>
+<circle cx="141.0" cy="302.6" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.57, accuracy 0.53, 1.6% of patches</title></circle>
+<circle cx="211.9" cy="285.3" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.63, accuracy 0.56, 1.7% of patches</title></circle>
+<circle cx="282.9" cy="273.9" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.70, accuracy 0.58, 2.0% of patches</title></circle>
+<circle cx="354.2" cy="245.3" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.77, accuracy 0.63, 2.4% of patches</title></circle>
+<circle cx="425.4" cy="220.8" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.84, accuracy 0.68, 3.3% of patches</title></circle>
+<circle cx="498.4" cy="177.2" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.90, accuracy 0.76, 5.7% of patches</title></circle>
+<circle cx="592.4" cy="61.4" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter: confidence 0.99, accuracy 0.97, 82.5% of patches</title></circle>
+<circle cx="101.8" cy="60.4" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>color jitter</title></circle>
+<text x="113.8" y="64.4" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Color jitter (ECE 4.2)</text>
+<polyline points="87.6,313.7 141.0,307.6 211.9,303.4 282.7,293.4 353.8,281.3 425.2,261.5 497.7,235.9 592.5,109.9" fill="none" style="stroke:var(--accent, #0077BB)" stroke-width="2"/>
+<circle cx="87.6" cy="313.7" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.52, accuracy 0.51, 1.0% of patches</title></circle>
+<circle cx="141.0" cy="307.6" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.57, accuracy 0.52, 2.1% of patches</title></circle>
+<circle cx="211.9" cy="303.4" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.63, accuracy 0.52, 2.2% of patches</title></circle>
+<circle cx="282.7" cy="293.4" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.70, accuracy 0.54, 2.5% of patches</title></circle>
+<circle cx="353.8" cy="281.3" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.77, accuracy 0.56, 2.9% of patches</title></circle>
+<circle cx="425.2" cy="261.5" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.84, accuracy 0.60, 3.8% of patches</title></circle>
+<circle cx="497.7" cy="235.9" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.90, accuracy 0.65, 6.1% of patches</title></circle>
+<circle cx="592.5" cy="109.9" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation: confidence 0.99, accuracy 0.88, 79.4% of patches</title></circle>
+<circle cx="101.8" cy="87.6" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>no augmentation</title></circle>
+<text x="113.8" y="91.6" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">No augmentation (ECE 12.8)</text>
+</svg>
+    <figcaption>Confidence against accuracy on hospital 2, pretrained models, 10 seeds pooled. ECE is the expected calibration error in percentage points; lower is better.</figcaption>
+  </figure>
+
+  <h2 id="looking-inside-the-model">Looking inside the model</h2>
+  <p>For the rest of the project I used one final model: the official pipeline's seed with the best hospital 1 accuracy (94.0%). It reaches 96.2% on hospital 2, misses about twice as many tumors (2,144) as it raises false alarms (1,105), and its errors cluster in a few slides: one slide lost 72% of its 184 tumor patches, another 41% of 495.</p>
+  <p>To see what it looks at, I used Grad-CAM, which weights a layer's feature maps by how much they push the prediction and draws the result over the patch. The first version drew heatmaps next to the patches, which made them hard to read, so I switched to overlays.</p>
+  <figure>
+    <img class="photo" src="../assets/tumor-gradcam.jpg" width="588" height="390" alt="Three tissue patches from the unseen hospital on top, and below each the same patch with a Grad-CAM heatmap showing where the model found its evidence.">
+    <figcaption>Hospital 2 patches (top) and the same patches with the final model's Grad-CAM overlay (bottom). The label depends only on the central third of each patch.</figcaption>
+  </figure>
+  <p>Choosing the layer was a trade-off I had to make. Later layers carry more class-specific abstract information, but ResNet-18 shrinks its input 32 times, so at 96×96 the last block gives only a 3×3 map. Most ImageNet-style CNNs shrink by the same factor, including the DenseNet-121 in the WILDS baseline, so this comes from using small patches with standard backbones. I use the 6×6 map of the block before.</p>
+  <p>The overlays showed something I was not expecting. The model usually looks outside the central box. Correct predictions put about 12% of their heat in the central region, roughly what an even spread would give. The model judges the whole patch, which works because tumor tissue usually extends beyond the center. It should fail where the center and its surroundings differ.</p>
+  <p>I was able to test this. Patches sit on a 32-pixel grid, the same size as the label region, so the labels of a patch's eight grid neighbors describe exactly the ring around its center:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Label</th><th>Neighbors with the other label</th><th>Patches</th><th>Error rate</th></tr></thead>
+    <tbody>
+      <tr><td>Tumor</td><td>none</td><td>41,993</td><td>4.8%</td></tr>
+      <tr><td>Tumor</td><td>up to 1/4</td><td>486</td><td>23.1%</td></tr>
+      <tr><td>Tumor</td><td>1/4 to 1/2</td><td>47</td><td>48.9%</td></tr>
+      <tr><td>No tumor</td><td>none</td><td>11,991</td><td>2.7%</td></tr>
+      <tr><td>No tumor</td><td>over 1/2</td><td>222</td><td>32.4%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Final model on hospital 2. Some groups are small, and neighboring patches overlap, so their errors aren't independent.</p>
+  <p>My hypothesis held: errors rise where the surroundings disagree with the center. But boundary patches are rare and hold only about 6.5% of all errors. Most mistakes happen inside uniform tumor regions.</p>
+
+  <h2 id="a-second-architecture-center-and-context">A second architecture: center and context</h2>
+  <p class="aside">This experiment came after I had seen the hospital 2 results, so it's an exploratory branch of the experiment.</p>
+  <p>Seeing that the model leans on the surroundings, I asked "what happens when it has to look at the center separately?", which led to the new architecture: one ResNet-18 sees only the 32×32 center, another sees the patch with the center blanked out, and a learned gate decides per patch how much the context branch adds:</p>
+  <p class="formula">score = center + gate × context, with the gate between 0 and 1</p>
+  <p>During training, context dropout switches the context off for half the patches, so the center branch has to work alone. Getting this to work took four short pipeline checks, one seed each:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Check</th><th>Change</th><th>Hospital 1</th><th>Center only</th><th>Context only</th><th>Gate</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>First version</td><td>88.2</td><td>80.0</td><td>87.0</td><td>0.83</td></tr>
+      <tr><td>2</td><td>Small-image stem for the center branch</td><td>85.8</td><td>84.6</td><td>50.0</td><td>0.05</td></tr>
+      <tr><td>3</td><td>A separate loss for each branch</td><td>93.3</td><td>84.5</td><td>93.5</td><td>0.75</td></tr>
+      <tr><td>4</td><td>A gate with a hidden layer</td><td>93.0</td><td>84.6</td><td>92.7</td><td>0.67</td></tr>
+    </tbody>
+  </table></div>
+  <p><strong>1: the center branch was crippled.</strong> ResNet-18's first layers were built for 224×224 photos and shrink the input four times before any real processing, so the 32×32 center became 8×8 almost immediately. I replaced them, for the center branch only, with a 3×3 convolution that keeps the full resolution, the standard change for small images.</p>
+  <p><strong>2: the gate collapsed.</strong> The better center branch got good quickly, the gate closed to keep the still-random context branch out, and then the context branch received almost no learning signal, because its share of the error is multiplied by the gate. It never learned anything which is apparent from its score (50%), which is chance. Check 1 had shown the opposite, a wide-open gate, only because its center branch was the weak one. So, a "learned gate" mostly records which branch got good first, not how useful each part of the image is.</p>
+  <p><strong>3: the fix.</strong> Each branch also gets a loss on its own prediction, so it learns whatever the gate does.</p>
+  <p><strong>4: a bigger gate.</strong> A single linear gate can only weigh features additively, so I tried one with a hidden layer. The difference was smaller than the noise of one seed, so by the rule set before the check I kept the simpler gate.</p>
+  <p>Then I ran the full experiment with 10 seeds with context dropout and 10 without.</p>
+  <figure>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 386" role="img" aria-label="Hospital 1 mean and hospital 2 accuracy per seed for ResNet-18 and the two-branch model">
+<circle cx="130.0" cy="16.0" r="5" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Hospital 1</title></circle>
+<text x="142.0" y="20.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">hospital 1, mean of 10 seeds</text>
+<circle cx="390.0" cy="16.0" r="5" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Hospital 2</title></circle>
+<text x="402.0" y="20.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">hospital 2, each seed</text>
+<line x1="120.0" y1="330.0" x2="620.0" y2="330.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="334.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">86</text>
+<line x1="120.0" y1="283.3" x2="620.0" y2="283.3" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="287.3" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">88</text>
+<line x1="120.0" y1="236.7" x2="620.0" y2="236.7" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="240.7" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">90</text>
+<line x1="120.0" y1="190.0" x2="620.0" y2="190.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="194.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">92</text>
+<line x1="120.0" y1="143.3" x2="620.0" y2="143.3" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="147.3" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">94</text>
+<line x1="120.0" y1="96.7" x2="620.0" y2="96.7" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="100.7" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">96</text>
+<line x1="120.0" y1="50.0" x2="620.0" y2="50.0" style="stroke:var(--line, #dde2e8)" stroke-width="1"/>
+<text x="110.0" y="54.0" font-size="12" text-anchor="end" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">98</text>
+<circle cx="176.0" cy="148.6" r="6" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final: hospital 1 mean 93.8%</title></circle>
+<line x1="198.0" y1="170.3" x2="242.0" y2="170.3" style="stroke:var(--prior, #EE7733)" stroke-width="2"/>
+<circle cx="202.0" cy="240.9" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 0: hospital 2 89.8%</title></circle>
+<circle cx="206.0" cy="149.0" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 1: hospital 2 93.8%</title></circle>
+<circle cx="210.0" cy="107.2" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 2: hospital 2 95.5%</title></circle>
+<circle cx="214.0" cy="158.1" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 3: hospital 2 93.4%</title></circle>
+<circle cx="218.0" cy="197.1" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 4: hospital 2 91.7%</title></circle>
+<circle cx="222.0" cy="181.9" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 5: hospital 2 92.3%</title></circle>
+<circle cx="226.0" cy="171.4" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 6: hospital 2 92.8%</title></circle>
+<circle cx="230.0" cy="168.9" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 7: hospital 2 92.9%</title></circle>
+<circle cx="234.0" cy="236.6" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 8: hospital 2 90.0%</title></circle>
+<circle cx="238.0" cy="92.5" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>ResNet-18, official final, seed 9: hospital 2 96.2%</title></circle>
+<text x="266.0" y="174.3" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">92.8</text>
+<text x="220.0" y="358.0" font-size="13" text-anchor="middle" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">ResNet-18</text>
+<text x="220.0" y="376.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">official final</text>
+<circle cx="336.0" cy="162.6" r="6" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5: hospital 1 mean 93.2%</title></circle>
+<line x1="358.0" y1="134.4" x2="402.0" y2="134.4" style="stroke:var(--prior, #EE7733)" stroke-width="2"/>
+<circle cx="362.0" cy="130.1" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 0: hospital 2 94.6%</title></circle>
+<circle cx="366.0" cy="141.4" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 1: hospital 2 94.1%</title></circle>
+<circle cx="370.0" cy="127.1" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 2: hospital 2 94.7%</title></circle>
+<circle cx="374.0" cy="135.8" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 3: hospital 2 94.3%</title></circle>
+<circle cx="378.0" cy="134.5" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 4: hospital 2 94.4%</title></circle>
+<circle cx="382.0" cy="140.5" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 5: hospital 2 94.1%</title></circle>
+<circle cx="386.0" cy="131.5" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 6: hospital 2 94.5%</title></circle>
+<circle cx="390.0" cy="119.7" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 7: hospital 2 95.0%</title></circle>
+<circle cx="394.0" cy="133.6" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 8: hospital 2 94.4%</title></circle>
+<circle cx="398.0" cy="149.6" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0.5, seed 9: hospital 2 93.7%</title></circle>
+<text x="426.0" y="138.4" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">94.4</text>
+<text x="380.0" y="358.0" font-size="13" text-anchor="middle" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Two-branch</text>
+<text x="380.0" y="376.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">context dropout 0.5</text>
+<circle cx="496.0" cy="156.3" r="6" style="fill:var(--accent, #0077BB);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0: hospital 1 mean 93.4%</title></circle>
+<line x1="518.0" y1="127.6" x2="562.0" y2="127.6" style="stroke:var(--prior, #EE7733)" stroke-width="2"/>
+<circle cx="522.0" cy="130.7" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 0: hospital 2 94.5%</title></circle>
+<circle cx="526.0" cy="117.9" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 1: hospital 2 95.1%</title></circle>
+<circle cx="530.0" cy="160.3" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 2: hospital 2 93.3%</title></circle>
+<circle cx="534.0" cy="127.2" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 3: hospital 2 94.7%</title></circle>
+<circle cx="538.0" cy="128.5" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 4: hospital 2 94.6%</title></circle>
+<circle cx="542.0" cy="152.1" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 5: hospital 2 93.6%</title></circle>
+<circle cx="546.0" cy="108.3" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 6: hospital 2 95.5%</title></circle>
+<circle cx="550.0" cy="115.4" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 7: hospital 2 95.2%</title></circle>
+<circle cx="554.0" cy="132.2" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 8: hospital 2 94.5%</title></circle>
+<circle cx="558.0" cy="103.1" r="4" style="fill:var(--prior, #EE7733);stroke:var(--surface, #fff)" stroke-width="2"><title>Two-branch, context dropout 0, seed 9: hospital 2 95.7%</title></circle>
+<text x="586.0" y="131.6" font-size="13" text-anchor="start" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">94.7</text>
+<text x="540.0" y="358.0" font-size="13" text-anchor="middle" font-weight="600" style="fill:var(--ink, #17202a);font-family:var(--font-body, sans-serif)">Two-branch</text>
+<text x="540.0" y="376.0" font-size="12" text-anchor="middle" font-weight="400" style="fill:var(--ink-2, #4a5563);font-family:var(--font-mono, monospace)">context dropout 0</text>
+<text x="120.0" y="40.0" font-size="12" text-anchor="start" font-weight="400" style="fill:var(--ink-3, #7b8695);font-family:var(--font-mono, monospace)">accuracy (%)</text>
+</svg>
+    <figcaption>Hospital 1 mean (blue) and hospital 2 accuracy per seed (orange, with a line at the mean) for the official ResNet-18 and the two-branch model. The two hospitals rank the models differently.</figcaption>
+  </figure>
+  <div class="tbl"><table>
+    <thead><tr><th></th><th>ResNet-18 (final pipeline)</th><th>Two-branch, dropout 0.5</th><th>Two-branch, dropout 0</th></tr></thead>
+    <tbody>
+      <tr><td>Hospital 1</td><td>93.77</td><td>93.18</td><td>93.45</td></tr>
+      <tr class="strong"><td>Hospital 2</td><td>92.84 ± 2.06</td><td>94.38 ± 0.35</td><td>94.68 ± 0.77</td></tr>
+      <tr><td>Hospital 2, center only</td><td>n/a</td><td>89.84</td><td>89.86</td></tr>
+      <tr><td>Hospital 2, context only</td><td>n/a</td><td>92.40</td><td>92.77</td></tr>
+      <tr><td>Gap to ID validation</td><td>5.6</td><td>3.8</td><td>3.6</td></tr>
+      <tr><td>ECE</td><td>4.2</td><td>3.5</td><td>3.3</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Mean of 10 seeds. Paired with ResNet-18 by seed on hospital 2: +1.54 for dropout 0.5 (better in 8 of 10 seeds, p = 0.064) and +1.83 for dropout 0 (8 of 10, p = 0.027). These p-values are uncorrected and outside the planned comparisons.</p>
+  <p>On the unseen hospital, the two-branch model is better, much more consistent across seeds, and better calibrated. Combining the branches beats either one alone there, though it didn't on hospital 1. Context dropout made no measurable difference, because the per-branch losses already keep both branches learning. And the context branch alone, which never sees the region that defines the label, nearly matches the full model, and the surroundings predict the label almost as well as the patch itself, which is expected, but still interesting to  play around with</p>
+  <p>Hospital 1 would never have picked this model, since it scores slightly lower there. That's a limit of choosing on a single validation hospital, and a reason to trust these results less than the planned ones.</p>
+  <p>I repeated the boundary test with all 10 seeds of both models, expecting the center branch to fix the boundary errors:</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Label</th><th>Neighbors with the other label</th><th>Patches</th><th>ResNet-18</th><th>Two-branch</th><th>Center only</th></tr></thead>
+    <tbody>
+      <tr><td>No tumor</td><td>over 1/2</td><td>222</td><td>28.3%</td><td>21.7%</td><td><strong>17.8%</strong></td></tr>
+      <tr><td>Tumor</td><td>up to 1/4</td><td>486</td><td><strong>31.0%</strong></td><td>32.4%</td><td>43.2%</td></tr>
+      <tr><td>Tumor</td><td>none</td><td>41,993</td><td>12.0%</td><td><strong>7.9%</strong></td><td>10.4%</td></tr>
+      <tr><td>No tumor</td><td>none</td><td>11,991</td><td><strong>2.2%</strong></td><td>3.2%</td><td>10.5%</td></tr>
+    </tbody>
+  </table></div>
+  <p class="small">Hospital 2 error rates, mean of 10 seeds per model, so higher than the single best-seed final model above.</p>
+  <p>It only half worked. Normal tissue surrounded by tumor fools a model that looks at context, and the center branch alone handles it best. But a small piece of tumor surrounded by normal tissue is still missed, even more often by the center branch, because a 32×32 view isn't enough to recognize it. Most of the gain came from tumor regions, where the two branches together make fewer mistakes than either alone. The cost is about one point more false alarms on normal tissue. I also do not rule out that the slight improvements are because of the differences in both models. The new architecture has more weights and can be less biased compared to the initial model.</p>
+
+  <h2 id="making-it-small-enough-for-a-browser">Making it small enough for a browser</h2>
+  <p>To run the demo below in a browser, I quantized the final model to 8-bit integers. Static quantization, calibrated on 2,000 training patches, made it four times smaller and more than twice as fast on one CPU thread with no loss of accuracy. Quantization-aware training wasn't needed.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Model</th><th>Size</th><th>1 thread</th><th>Hospital 2</th><th>ECE</th><th>Same as float32</th></tr></thead>
+    <tbody>
+      <tr><td>PyTorch float32</td><td>44.8 MB</td><td>16.5 ms</td><td>96.18</td><td>1.44</td><td>100%</td></tr>
+      <tr><td>PyTorch dynamic int8</td><td>44.8 MB</td><td>16.5 ms</td><td>96.18</td><td>1.44</td><td>99.97%</td></tr>
+      <tr><td>PyTorch static int8</td><td>11.3 MB</td><td>6.8 ms</td><td>96.18</td><td>1.36</td><td>99.52%</td></tr>
+      <tr><td>PyTorch QAT int8</td><td>11.3 MB</td><td>6.7 ms</td><td>95.00</td><td>2.54</td><td>97.90%</td></tr>
+      <tr class="strong"><td>ONNX int8 (this page)</td><td>11.4 MB</td><td>7.1 ms</td><td>96.22</td><td>1.20</td><td>99.94%</td></tr>
+    </tbody>
+  </table></div>
+  <p>For the browser I exported the model to ONNX with normalization and softmax inside the graph, so the page only has to send raw pixels and can't get the preprocessing wrong. Then I quantized it with ONNX Runtime and checked it in Node.js with the browser's WebAssembly engine against the Python outputs.</p>
+
+  <h2 id="what-i-learned">What I learned</h2>
+  <ul class="findings">
+    <li><strong>Decide how you'll choose before you see results.</strong> Writing the selection rules down first is what made the validation-data comparison possible, and it kept me from rescuing settings I liked.</li>
+    <li><strong>Measure before optimizing.</strong> Timing the data loader showed the bottleneck was file access, not the model, and packing the data turned weeks into hours.</li>
+    <li><strong>Check results with a second, independent method.</strong> The browser runtime exposed a measurement bug that looked exactly like quantization loss, and the boundary test turned a pattern in Grad-CAM heatmaps into a measured phenomena.</li>
+    <li><strong>Learned weights might explain less than they seem to.</strong> The two-branch gate swung from 0.83 to 0.05 between two checks for reasons that had nothing to do with how useful each part of the image was.</li>
+    <li><strong>and many others... :)</strong> </li>
+  </ul>
+
+  <h2 id="limits">Limits</h2>
+  <ul class="findings">
+    <li>All conclusions apply to ResNet-18-based models and one test hospital. A different hospital could rank the settings differently.</li>
+    <li>Hospital 2 is dominated by one slide that holds 64% of its tumor patches, so its average hides large differences between slides.</li>
+    <li>ID validation patches come from the same slides as the training patches, which makes known-hospital accuracy optimistic.</li>
+    <li>The two phases assume that the best augmentation doesn't depend on pretraining.</li>
+    <li>The comparison of the two selection rules changes learning rate, augmentation, pretraining and epoch together, so it measures the whole rule, not one choice.</li>
+    <li>The two-branch experiment was designed after seeing hospital 2, so it can only suggest, not confirm.</li>
+  </ul>
+
+  <h2 id="last-words">Last words</h2>
+  <p>This project started as a way for me to familiarize myself with the field. In hindsight, it also made me reflect on medical AI.</p>
+  <p>After running this small series of experiments, it seems to me the model and its limiting factors like scale and infrastructure are not the primary constraints in such applications. It showed me that a small network by today’s standards reached high accuracy on the hospitals it was trained on. The difficulty seems to be in building a model that functions well with out-of-distribution data. Without augmentation, accuracy dropped significantly. A large part of that gap came from color, from differences in staining and scanning. Balancing those differences out during training closed most of it.</p>
+  <p>The biggest effect did not emerge from utilizing a training setting or model architecture. It came from having data from a different hospital to check the choices against. This improved the results with every seed on the test hospital.</p>
+  <p>To me, this points to a direction for more robust medical AI. Standardizing how slides are stained and scanned could reduce the problem at its source.</p>
+  <p>I think this kind of work deserves more investment. Collecting and sharing data across hospitals is slow and expensive and it doesn’t promise the quick returns that attract most AI funding. But collecting and using such data can help patients tremendously.</p>
+
+  <div class="foot">
+    <p>Data: the CAMELYON17 challenge dataset (Bándi et al., 2019), in the Camelyon17-WILDS version of the WILDS benchmark (Koh et al., 2021). Demo patches are from its test hospital.</p>
+    <p><a href="https://github.com/malikdurmus/tumor-classification">Code</a> · <a href="../">Yusuf Malik Durmus</a></p>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/ort.min.js"></script>
+<script>
+  const ORT_DIST = "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.31.1/dist/";
+  const OUTCOMES = { "correct tumor": "correct", "correct no tumor": "correct", "missed tumor": "missed tumor", "false alarm": "false alarm" };
+  const $ = (id) => document.getElementById(id);
+  let samples = [], current = null, session = null, showCam = false;
+
+  function loadSession() {
+    if (!session) {
+      ort.env.wasm.wasmPaths = ORT_DIST;
+      ort.env.wasm.numThreads = 1;
+      session = ort.InferenceSession.create("model_int8.onnx");
+    }
+    return session;
+  }
+
+  // The model expects raw RGB pixels (0-255) in channel-first order; normalization is inside the model
+  async function pixels(src) {
+    const img = new Image();
+    img.src = src;
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 96;
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0);
+    const rgba = ctx.getImageData(0, 0, 96, 96).data;
+    const out = new Float32Array(3 * 96 * 96);
+    for (let i = 0; i < 96 * 96; i++) {
+      for (let c = 0; c < 3; c++) out[c * 96 * 96 + i] = rgba[4 * i + c];
+    }
+    return out;
+  }
+
+  function showView() {
+    $("view").src = showCam ? current.cam : current.file;
+    $("show-patch").setAttribute("aria-pressed", String(!showCam));
+    $("show-cam").setAttribute("aria-pressed", String(showCam));
+  }
+
+  async function select(index) {
+    current = samples[index];
+    document.querySelectorAll(".thumbs button").forEach((b, i) => b.setAttribute("aria-pressed", String(i === index)));
+    showView();
+    for (const id of ["prob", "pred", "outcome", "time"]) $(id).textContent = "…";
+    $("bar").style.width = "0";
+    $("truth").textContent = current.tumor ? "tumor" : "no tumor";
+    $("expected").textContent = current.probability.toFixed(2);
+    try {
+      if (!session) $("status").textContent = "Loading the model (11 MB)…";
+      const model = await loadSession();
+      const input = new ort.Tensor("float32", await pixels(current.file), [1, 3, 96, 96]);
+      const start = performance.now();
+      const p = (await model.run({ pixels: input })).tumor_probability.data[0];
+      $("time").textContent = `${(performance.now() - start).toFixed(0)} ms in your browser`;
+      $("prob").textContent = `${(100 * p).toFixed(0)}% tumor`;
+      $("bar").style.width = `${100 * p}%`;
+      $("pred").textContent = p >= 0.5 ? "tumor" : "no tumor";
+      $("outcome").textContent = OUTCOMES[current.outcome];
+      $("status").textContent = Math.abs(p - current.probability) < 0.01
+        ? "The browser result matches the Python run." : "The browser result differs from the Python run.";
+    } catch (error) {
+      $("status").textContent = `The model could not run in this browser: ${error.message}`;
+    }
+  }
+
+  $("show-patch").addEventListener("click", () => { showCam = false; if (current) showView(); });
+  $("show-cam").addEventListener("click", () => { showCam = true; if (current) showView(); });
+
+  fetch("samples/samples.json").then((r) => r.json()).then((data) => {
+    samples = data;
+    samples.forEach((s, i) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.setAttribute("aria-pressed", "false");
+      button.setAttribute("aria-label", `Sample ${i + 1}`);
+      button.innerHTML = `<img src="${s.file}" alt="">`;
+      button.addEventListener("click", () => select(i));
+      $("thumbs").append(button);
+    });
+    $("view").src = samples[0].file;
+  });
+</script>
+</body>
+</html>

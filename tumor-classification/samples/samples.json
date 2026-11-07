@@ -1,0 +1,170 @@
+[
+ {
+  "file": "samples/00.png",
+  "cam": "samples/00_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/01.png",
+  "cam": "samples/01_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/02.png",
+  "cam": "samples/02_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/03.png",
+  "cam": "samples/03_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/04.png",
+  "cam": "samples/04_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/05.png",
+  "cam": "samples/05_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/06.png",
+  "cam": "samples/06_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/07.png",
+  "cam": "samples/07_cam.png",
+  "outcome": "correct tumor",
+  "tumor": 1,
+  "probability": 0.9961
+ },
+ {
+  "file": "samples/08.png",
+  "cam": "samples/08_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/09.png",
+  "cam": "samples/09_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/10.png",
+  "cam": "samples/10_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/11.png",
+  "cam": "samples/11_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/12.png",
+  "cam": "samples/12_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0078
+ },
+ {
+  "file": "samples/13.png",
+  "cam": "samples/13_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/14.png",
+  "cam": "samples/14_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/15.png",
+  "cam": "samples/15_cam.png",
+  "outcome": "correct no tumor",
+  "tumor": 0,
+  "probability": 0.0
+ },
+ {
+  "file": "samples/16.png",
+  "cam": "samples/16_cam.png",
+  "outcome": "missed tumor",
+  "tumor": 1,
+  "probability": 0.2627
+ },
+ {
+  "file": "samples/17.png",
+  "cam": "samples/17_cam.png",
+  "outcome": "missed tumor",
+  "tumor": 1,
+  "probability": 0.3569
+ },
+ {
+  "file": "samples/18.png",
+  "cam": "samples/18_cam.png",
+  "outcome": "missed tumor",
+  "tumor": 1,
+  "probability": 0.0039
+ },
+ {
+  "file": "samples/19.png",
+  "cam": "samples/19_cam.png",
+  "outcome": "missed tumor",
+  "tumor": 1,
+  "probability": 0.0314
+ },
+ {
+  "file": "samples/20.png",
+  "cam": "samples/20_cam.png",
+  "outcome": "false alarm",
+  "tumor": 0,
+  "probability": 0.9569
+ },
+ {
+  "file": "samples/21.png",
+  "cam": "samples/21_cam.png",
+  "outcome": "false alarm",
+  "tumor": 0,
+  "probability": 0.7333
+ },
+ {
+  "file": "samples/22.png",
+  "cam": "samples/22_cam.png",
+  "outcome": "false alarm",
+  "tumor": 0,
+  "probability": 0.9686
+ },
+ {
+  "file": "samples/23.png",
+  "cam": "samples/23_cam.png",
+  "outcome": "false alarm",
+  "tumor": 0,
+  "probability": 0.6745
+ }
+]

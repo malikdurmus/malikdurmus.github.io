@@ -149,6 +149,24 @@
 
   <article class="project">
     <div>
+      <h3>Tumor Classification Under Hospital Shift</h3>
+      <p class="meta">Personal computer vision project · 2026</p>
+      <p>Tissue images look different from hospital to hospital, and classifiers often fail at a hospital they have never seen. I trained ResNet-18 tumor classifiers on Camelyon17-WILDS in 117 runs and measured how augmentation, pretraining and the choice of validation data change accuracy at an unseen hospital.</p>
+      <p>Color jitter closed most of the gap, and choosing settings on an unseen hospital instead of known ones raised test accuracy from 81% to 93%. The final model is quantized to int8 and runs in the browser, with Grad-CAM showing where it found its evidence.</p>
+      <ul class="tags"><li>PyTorch</li><li>Computer vision</li><li>Distribution shift</li><li>Quantization</li><li>ONNX Runtime Web</li></ul>
+      <ul class="actions">
+        <li><a href="tumor-classification/">Project report and demo</a></li>
+        <li><a href="https://github.com/malikdurmus/tumor-classification">Code</a></li>
+      </ul>
+    </div>
+    <figure>
+      <img src="assets/tumor-gradcam.jpg" width="588" height="390" alt="Three lymph node tissue patches from the unseen hospital on top, and below each one the same patch with a Grad-CAM heatmap showing where the model found its evidence.">
+      <figcaption>Patches from the unseen hospital (top) and where the model found its evidence, by Grad-CAM (bottom).</figcaption>
+    </figure>
+  </article>
+
+  <article class="project">
+    <div>
       <h3>jax-keyguard: Catching PRNG Key Reuse in JAX</h3>
       <p class="meta">Open-source Python package · Personal project · 2026</p>
       <p>In JAX, reusing a random key silently repeats the same "random" numbers. I built a tool that finds this mistake in two ways: a static checker that follows keys through branches, loops and aliases without running the code, and a runtime check that raises an error the moment a key is reused.</p>
