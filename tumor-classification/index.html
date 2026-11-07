@@ -106,10 +106,10 @@
   <a class="back" href="../">← Yusuf Malik Durmus</a>
   <p class="eyebrow">Project report · Personal computer vision project</p>
   <h1>Tumor Classification Under Hospital Shift</h1>
-  <p class="lede">I trained a classifier that finds tumor tissue in lymph node histology patches, then measured how well it works at a hospital it has never seen. This is the story of how the project went: the plan, the engineering problems, the results, and the experiments that failed before one worked.</p>
+  <p class="lede">I trained a classifier that finds tumor tissue in lymph node histology patches, then measured how well it works at a hospital it has never seen. This is the story of how the project went: the plan, the engineering problems, the results, and the experiments.</p>
   <dl class="facts">
     <div><dt>Author</dt><dd>Yusuf Malik Durmus</dd></div>
-    <div><dt>Data</dt><dd>Camelyon17-WILDS: 455,954 patches from 5 hospitals</dd></div>
+    <div><dt>Data</dt><dd>Camelyon17-WILDS</dd></div>
     <div><dt>Stack</dt><dd class="stack">Python · PyTorch · torchvision · Weights &amp; Biases · ONNX Runtime · onnxruntime-web</dd></div>
     <div><dt>Code</dt><dd><a href="https://github.com/malikdurmus/tumor-classification">github.com/malikdurmus/tumor-classification</a></dd></div>
   </dl>
@@ -597,7 +597,7 @@
   <p>After running this small series of experiments, it seems to me the model and its limiting factors like scale and infrastructure are not the primary constraints in such applications. It showed me that a small network by today’s standards reached high accuracy on the hospitals it was trained on. The difficulty seems to be in building a model that functions well with out-of-distribution data. Without augmentation, accuracy dropped significantly. A large part of that gap came from color, from differences in staining and scanning. Balancing those differences out during training closed most of it.</p>
   <p>The biggest effect did not emerge from utilizing a training setting or model architecture. It came from having data from a different hospital to check the choices against. This improved the results with every seed on the test hospital.</p>
   <p>To me, this points to a direction for more robust medical AI. Standardizing how slides are stained and scanned could reduce the problem at its source.</p>
-  <p>I think this kind of work deserves more investment. Collecting and sharing data across hospitals is slow and expensive and it doesn’t promise the quick returns that attract most AI funding. But collecting and using such data can help patients tremendously.</p>
+  <p>I think this kind of work deserves more investment. Collecting and sharing data across hospitals is slow and expensive and it migh not promise the quick returns that attract most AI funding. But collecting and using such data can help patients tremendously.</p>
 
   <div class="foot">
     <p>Data: the CAMELYON17 challenge dataset (Bándi et al., 2019), in the Camelyon17-WILDS version of the WILDS benchmark (Koh et al., 2021). Demo patches are from its test hospital.</p>
