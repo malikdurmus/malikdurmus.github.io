@@ -116,7 +116,7 @@
   <div class="notice"><p><strong>Research demo, not a medical tool.</strong> The model and the demo below are for learning about distribution shift. They must not be used for diagnosis.</p></div>
 
   <h2 id="try-it">Try it</h2>
-  <p>Pick an image. The model runs in your browser as an 11 MB int8 network locally. The samples are random within each outcome (8 correct tumor, 8 correct no tumor, 4 missed tumors and 4 false positives) The dashed box marks the region that defines the label.</p>
+  <p>Pick an image. The model, an 11 MB int8 network, runs locally in your browser. The samples are random within each outcome (8 correct tumor, 8 correct no tumor, 4 missed tumors and 4 false alarms). The dashed box marks the region that defines the label.</p>
   <div class="demo">
     <div>
       <div class="frame"><img id="view" alt="Selected tissue patch"><div class="box"></div></div>
@@ -202,7 +202,7 @@
       <tr><td>One 10-epoch run</td><td>about 20 hours</td><td>about 37 minutes</td></tr>
     </tbody>
   </table></div>
-  <p>I checked the packed array against the originals to test the arrays. Labels and hospitals matched the metadata for every patch, and pixels were identical.</p>
+  <p>I checked the packed array against the original files. Labels and hospitals matched the metadata for every patch, and pixels were identical.</p>
 
   <h2 id="training-on-shared-machines">Training on shared machines</h2>
   <p>The GPUs were on shared university machines, where a job pauses when someone logs in locally and every machine reboots at least once a week. So every run had to survive being killed. Each epoch saves a checkpoint, written to a temporary file and then renamed, so a crash during saving can't corrupt the previous one. A resubmitted job continues after the last finished epoch, and the random seed is derived from the run seed and the epoch number, so a resumed run shuffles and augments exactly as it would have. I tested this by killing a real job halfway through an epoch.</p>
@@ -459,7 +459,7 @@
     </tbody>
   </table></div>
   <p><strong>1: the center branch was crippled.</strong> ResNet-18's first layers were built for 224×224 photos and shrink the input four times before any real processing, so the 32×32 center became 8×8 almost immediately. I replaced them, for the center branch only, with a 3×3 convolution that keeps the full resolution, the standard change for small images.</p>
-  <p><strong>2: the gate collapsed.</strong> The better center branch got good quickly, the gate closed to keep the still-random context branch out, and then the context branch received almost no learning signal, because its share of the error is multiplied by the gate. It never learned anything which is apparent from its score (50%), which is chance. Check 1 had shown the opposite, a wide-open gate, only because its center branch was the weak one. So, a "learned gate" mostly records which branch got good first, not how useful each part of the image is.</p>
+  <p><strong>2: the gate collapsed.</strong> The better center branch got good quickly, the gate closed to keep the still-random context branch out, and then the context branch received almost no learning signal, because its share of the error is multiplied by the gate. It never learned anything: its score of 50% is chance. Check 1 had shown the opposite, a wide-open gate, only because its center branch was the weak one. So, a "learned gate" mostly records which branch got good first, not how useful each part of the image is.</p>
   <p><strong>3: the fix.</strong> Each branch also gets a loss on its own prediction, so it learns whatever the gate does.</p>
   <p><strong>4: a bigger gate.</strong> A single linear gate can only weigh features additively, so I tried one with a hidden layer. The difference was smaller than the noise of one seed, so by the rule set before the check I kept the simpler gate.</p>
   <p>Then I ran the full experiment with 10 seeds with context dropout and 10 without.</p>
@@ -544,7 +544,7 @@
     </tbody>
   </table></div>
   <p class="small">Mean of 10 seeds. Paired with ResNet-18 by seed on hospital 2: +1.54 for dropout 0.5 (better in 8 of 10 seeds, p = 0.064) and +1.83 for dropout 0 (8 of 10, p = 0.027). These p-values are uncorrected and outside the planned comparisons.</p>
-  <p>On the unseen hospital, the two-branch model is better, much more consistent across seeds, and better calibrated. Combining the branches beats either one alone there, though it didn't on hospital 1. Context dropout made no measurable difference, because the per-branch losses already keep both branches learning. And the context branch alone, which never sees the region that defines the label, nearly matches the full model, and the surroundings predict the label almost as well as the patch itself, which is expected, but still interesting to  play around with</p>
+  <p>On the unseen hospital, the two-branch model is better, much more consistent across seeds, and better calibrated. Combining the branches beats either one alone there, though it didn't on hospital 1. Context dropout made no measurable difference, because the per-branch losses already keep both branches learning. And the context branch alone, which never sees the region that defines the label, nearly matches the full model: the surroundings predict the label almost as well as the patch itself. That is expected, since tumor tissue usually extends beyond the center, but still interesting.</p>
   <p>Hospital 1 would never have picked this model, since it scores slightly lower there. That's a limit of choosing on a single validation hospital, and a reason to trust these results less than the planned ones.</p>
   <p>I repeated the boundary test with all 10 seeds of both models, expecting the center branch to fix the boundary errors:</p>
   <div class="tbl"><table>
@@ -557,7 +557,7 @@
     </tbody>
   </table></div>
   <p class="small">Hospital 2 error rates, mean of 10 seeds per model, so higher than the single best-seed final model above.</p>
-  <p>It only half worked. Normal tissue surrounded by tumor fools a model that looks at context, and the center branch alone handles it best. But a small piece of tumor surrounded by normal tissue is still missed, even more often by the center branch, because a 32×32 view isn't enough to recognize it. Most of the gain came from tumor regions, where the two branches together make fewer mistakes than either alone. The cost is about one point more false alarms on normal tissue. I also do not rule out that the slight improvements are because of the differences in both models. The new architecture has more weights and can be less biased compared to the initial model.</p>
+  <p>It only half worked. Normal tissue surrounded by tumor fools a model that looks at context, and the center branch alone handles it best. But a small piece of tumor surrounded by normal tissue is still missed, even more often by the center branch, because a 32×32 view isn't enough to recognize it. Most of the gain came from tumor regions, where the two branches together make fewer mistakes than either alone. The cost is about one point more false alarms on normal tissue. I also can't rule out that the small improvement comes from other differences between the two models: the new architecture has more weights than the original one.</p>
 
   <h2 id="making-it-small-enough-for-a-browser">Making it small enough for a browser</h2>
   <p>To run the demo below in a browser, I quantized the final model to 8-bit integers. Static quantization, calibrated on 2,000 training patches, made it four times smaller and more than twice as fast on one CPU thread with no loss of accuracy. Quantization-aware training wasn't needed.</p>
@@ -577,7 +577,7 @@
   <ul class="findings">
     <li><strong>Decide how you'll choose before you see results.</strong> Writing the selection rules down first is what made the validation-data comparison possible, and it kept me from rescuing settings I liked.</li>
     <li><strong>Measure before optimizing.</strong> Timing the data loader showed the bottleneck was file access, not the model, and packing the data turned weeks into hours.</li>
-    <li><strong>Check results with a second, independent method.</strong> The browser runtime exposed a measurement bug that looked exactly like quantization loss, and the boundary test turned a pattern in Grad-CAM heatmaps into a measured phenomena.</li>
+    <li><strong>Check results with a second, independent method.</strong> The browser runtime exposed a measurement bug that looked exactly like quantization loss, and the boundary test turned a pattern in Grad-CAM heatmaps into a measured phenomenon.</li>
     <li><strong>Learned weights might explain less than they seem to.</strong> The two-branch gate swung from 0.83 to 0.05 between two checks for reasons that had nothing to do with how useful each part of the image was.</li>
     <li><strong>and many others... :)</strong> </li>
   </ul>
@@ -597,7 +597,7 @@
   <p>After running this small series of experiments, it seems to me the model and its limiting factors like scale and infrastructure are not the primary constraints in such applications. It showed me that a small network by today’s standards reached high accuracy on the hospitals it was trained on. The difficulty seems to be in building a model that functions well with out-of-distribution data. Without augmentation, accuracy dropped significantly. A large part of that gap came from color, from differences in staining and scanning. Balancing those differences out during training closed most of it.</p>
   <p>The biggest effect did not emerge from utilizing a training setting or model architecture. It came from having data from a different hospital to check the choices against. This improved the results with every seed on the test hospital.</p>
   <p>To me, this points to a direction for more robust medical AI. Standardizing how slides are stained and scanned could reduce the problem at its source.</p>
-  <p>I think this kind of work deserves more investment. Collecting and sharing data across hospitals is slow and expensive and it migh not promise the quick returns that attract most AI funding. But collecting and using such data can help patients tremendously.</p>
+  <p>I think this kind of work deserves more investment. Collecting and sharing data across hospitals is slow and expensive, and it might not promise the quick returns that attract most AI funding. But collecting and using such data can help patients tremendously.</p>
 
   <div class="foot">
     <p>Data: the CAMELYON17 challenge dataset (Bándi et al., 2019), in the Camelyon17-WILDS version of the WILDS benchmark (Koh et al., 2021). Demo patches are from its test hospital.</p>

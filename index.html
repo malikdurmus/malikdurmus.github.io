@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Yusuf Malik Durmus</title>
-<meta name="description" content="Projects in reinforcement learning, machine learning and software engineering by Yusuf Malik Durmus, M.Sc. student at TUM.">
+<meta name="description" content="Projects in deep learning, reinforcement learning and software engineering by Yusuf Malik Durmus, M.Sc. student at TUM.">
 <meta property="og:title" content="Yusuf Malik Durmus">
-<meta property="og:description" content="Projects in reinforcement learning, machine learning and software engineering.">
+<meta property="og:description" content="Projects in deep learning, reinforcement learning and software engineering.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=Source+Serif+4:opsz,wght@8..60,600&display=swap">
@@ -44,7 +44,7 @@
   h2 { font-family: var(--serif); font-weight: 600; font-size: 24px; margin: 56px 0 18px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 
   .project { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; padding: 26px 0; border-bottom: 1px solid var(--line); }
-  .project:last-of-type { border-bottom: 0; }
+  .project:last-of-type, .project:has(+ h2) { border-bottom: 0; }
   .project.text-only { grid-template-columns: minmax(0, 1fr); }
   .project h3 { font-size: 20px; font-weight: 700; margin: 0 0 2px; line-height: 1.3; }
   .project .meta { color: var(--muted); font-size: 15.5px; margin: 0 0 10px; }
@@ -76,7 +76,7 @@
 
   footer { margin-top: 56px; color: var(--muted); font-size: 14.5px; }
 
-  .print-only { display: none; }
+  .print-only { display: none !important; }
   @media print {
     @page { size: A4; margin: 12mm 14mm; }
     :root { --bg: #ffffff; --surface: #ffffff; --ink: #1b1f24; --muted: #555e69; --line: #dfe3e7; --accent: #1f5f8b; --tag-bg: #eef2f5; }
@@ -97,14 +97,14 @@
     .skills { grid-template-columns: 150px minmax(0, 1fr); gap: 3px 16px; }
     .skills dt, .skills dd { font-size: 10pt; }
     video { display: none !important; }
-    .print-only { display: block; }
+    .print-only { display: block !important; }
     footer { display: none; }
   }
   @media (max-width: 680px) {
     .page { padding-top: 40px; }
     header h1 { font-size: 32px; }
     .project { grid-template-columns: minmax(0, 1fr); gap: 14px; }
-    .project figure { order: -1; max-width: 420px; }
+    .project figure { max-width: 420px; }
     .skills { grid-template-columns: minmax(0, 1fr); gap: 2px; }
     .skills dd { margin-bottom: 10px; }
     .rows li { grid-template-columns: minmax(0, 1fr); }
@@ -117,7 +117,7 @@
   <header>
     <h1>Yusuf Malik Durmus</h1>
     <p class="role">M.Sc. student in Computer Science at TUM · B.Sc. Computer Science &amp; Statistics, LMU Munich</p>
-    <p class="intro">I work on reinforcement learning and the software around it: preference learning, training pipelines, simulation, and the tooling that makes experiments reproducible.</p>
+    <p class="intro">I build deep learning systems and the software around them, from reinforcement learning agents and simulations to medical image classifiers, training pipelines and developer tools.</p>
     <ul class="links">
       <li><a href="mailto:malikdurmus2@gmail.com">malikdurmus2@gmail.com</a></li>
       <li><a href="https://github.com/malikdurmus">GitHub</a></li>
@@ -133,7 +133,7 @@
       <h3>Preference-Guided Curriculum Discovery for Robust RL</h3>
       <p class="meta">Bachelor's thesis · LMU Munich, Chair of Mobile and Distributed Systems · 2026</p>
       <p>Reinforcement learning agents generalize better when they train on well-chosen environments. I used an LLM (Gemini) to compare about 88,000 pairs of rendered levels by difficulty, validated the labels against human judgment, and trained a neural network ensemble that ranks new levels.</p>
-      <p>I then extended a state-of-the-art curriculum algorithm (Sampling for Learnability) with this difficulty model, new selection rules and an adaptive difficulty target, and evaluated it in about 200 GPU-accelerated training runs with paired statistical tests.</p>
+      <p>I then extended a state-of-the-art curriculum algorithm (Sampling for Learnability) with this difficulty model, new selection rules and an adaptive difficulty target, and evaluated it in 300 GPU-accelerated training runs with paired statistical tests.</p>
       <ul class="tags"><li>JAX / Flax</li><li>Reinforcement learning</li><li>Preference learning</li><li>Gemini on Vertex AI</li><li>Slurm</li></ul>
       <ul class="actions">
         <li><a href="thesis-page/">Project report</a></li>
@@ -167,8 +167,28 @@
 
   <article class="project">
     <div>
+      <h3>RLHF-Gym: Reinforcement Learning from Human Feedback</h3>
+      <p class="meta">University software engineering project · LMU Munich · 2023–2024 · Grade 1.0</p>
+      <p>A complete pipeline that teaches robotic agents in MuJoCo from human preferences instead of a hand-written reward. I led the algorithm work: implementations of PEBBLE and SURF on top of Soft Actor-Critic, a learned reward model with semi-supervised learning and data augmentation, and ensemble-based query selection.</p>
+      <p>The project includes a web interface where people compare two agent videos, a thread-safe backend that feeds their answers into training, and training jobs on the university Slurm cluster.</p>
+      <ul class="tags"><li>PyTorch</li><li>SAC</li><li>Flask</li><li>MuJoCo</li><li>Slurm</li></ul>
+      <ul class="actions">
+        <li><a href="https://github.com/malikdurmus/RLHF-Gym">Code</a></li>
+      </ul>
+    </div>
+    <figure>
+      <img class="print-only" src="assets/rlhf-demo.jpg" width="800" height="434" alt="The feedback interface: two agent videos side by side.">
+      <video src="assets/rlhf-demo.mp4" poster="assets/rlhf-demo.jpg" width="800" height="434" autoplay muted loop playsinline aria-label="Recording of the feedback interface: two agent videos side by side, the user picks the better one."></video>
+      <figcaption>The feedback interface: a person picks the better of two agent behaviours.</figcaption>
+    </figure>
+  </article>
+
+  <h2>Side projects</h2>
+
+  <article class="project">
+    <div>
       <h3>jax-keyguard: Catching PRNG Key Reuse in JAX</h3>
-      <p class="meta">Open-source Python package · Personal project · 2026</p>
+      <p class="meta">Open-source Python package · 2026</p>
       <p>In JAX, reusing a random key silently repeats the same "random" numbers. I built a tool that finds this mistake in two ways: a static checker that follows keys through branches, loops and aliases without running the code, and a runtime check that raises an error the moment a key is reused.</p>
       <p>It covers the older <code>PRNGKey</code> keys that JAX's own check skips. Run on the JAX repository, it found an example program that draws every layer's weights and biases from the same key.</p>
       <ul class="tags"><li>Python</li><li>JAX</li><li>Static analysis</li><li>pytest / flake8 plugins</li><li>PyPI</li></ul>
@@ -191,26 +211,8 @@ jax.random.normal on line 173</code></pre>
 
   <article class="project">
     <div>
-      <h3>RLHF-Gym: Reinforcement Learning from Human Feedback</h3>
-      <p class="meta">University software engineering project · LMU Munich · 2023–2024 · Grade 1.0</p>
-      <p>A complete pipeline that teaches robotic agents in MuJoCo from human preferences instead of a hand-written reward. I led the algorithm work: implementations of PEBBLE and SURF on top of Soft Actor-Critic, a learned reward model with semi-supervised learning and data augmentation, and ensemble-based query selection.</p>
-      <p>The project includes a web interface where people compare two agent videos, a thread-safe backend that feeds their answers into training, and training jobs on the university Slurm cluster.</p>
-      <ul class="tags"><li>PyTorch</li><li>SAC</li><li>Flask</li><li>MuJoCo</li><li>Slurm</li></ul>
-      <ul class="actions">
-        <li><a href="https://github.com/malikdurmus/RLHF-Gym">Code</a></li>
-      </ul>
-    </div>
-    <figure>
-      <img class="print-only" src="assets/rlhf-demo.jpg" width="800" height="434" alt="The feedback interface: two agent videos side by side.">
-      <video src="assets/rlhf-demo.mp4" poster="assets/rlhf-demo.jpg" width="800" height="434" autoplay muted loop playsinline aria-label="Recording of the feedback interface: two agent videos side by side, the user picks the better one."></video>
-      <figcaption>The feedback interface: a person picks the better of two agent behaviours.</figcaption>
-    </figure>
-  </article>
-
-  <article class="project">
-    <div>
       <h3>Inferno Swarm: Autonomous Multi-Agent Simulation</h3>
-      <p class="meta">Personal project · 2025</p>
+      <p class="meta">Simulation · 2025</p>
       <p>A C++17 simulation of autonomous agents with emergent swarm behaviour. I implemented the steering behaviours (separation, alignment, cohesion) and force accumulation from scratch, and a cellular-automaton environment in which fire spreads and agents switch between flocking and extinguishing.</p>
       <ul class="tags"><li>C++17</li><li>SFML</li><li>CMake / vcpkg</li></ul>
     </div>
@@ -219,17 +221,6 @@ jax.random.normal on line 173</code></pre>
       <video src="assets/inferno-demo.mp4" poster="assets/inferno-demo.jpg" width="640" height="514" autoplay muted loop playsinline aria-label="Recording of Inferno Swarm: agents flock across a grid, a fire is lit and spreads, and agents move in to extinguish it."></video>
       <figcaption>A fire spreads across the grid while the agents switch between flocking and extinguishing.</figcaption>
     </figure>
-  </article>
-
-  <article class="project text-only">
-    <div>
-      <h3>Supermasks in Superposition: Continual Learning</h3>
-      <p class="meta">Scientific seminar paper · LMU Munich · Grade 1.0</p>
-      <p>A term paper analysing how a single fixed network can learn many tasks in sequence without forgetting, by selecting task-specific subnetworks instead of changing weights.</p>
-      <ul class="actions">
-        <li><a href="https://github.com/malikdurmus/research-portfolio/blob/main/Yusuf_Durmus_final_Seminararbeit.pdf">Paper (PDF)</a></li>
-      </ul>
-    </div>
   </article>
 
   <h2>Experience</h2>
@@ -259,23 +250,23 @@ jax.random.normal on line 173</code></pre>
     <li>
       <span><span class="what">B.Sc. Computer Science &amp; Statistics</span> · <span class="where">LMU Munich</span></span>
       <span class="when">2022–2026</span>
+      <span class="detail">Seminar paper: <a href="https://github.com/malikdurmus/research-portfolio/blob/main/Yusuf_Durmus_final_Seminararbeit.pdf">Supermasks in Superposition: Continual Learning</a> (PDF), grade 1.0</span>
     </li>
     <li>
-      <span><span class="what">German Abitur &amp; Turkish High School Diploma</span> · <span class="where">İstanbul Erkek Lisesi</span></span>
+      <span><span class="what">German Abitur &amp; Turkish High School Diploma</span> · <span class="where">Istanbuler Gymnasium (Istanbul High School)</span></span>
       <span class="when">2016–2021</span>
     </li>
   </ul>
 
   <h2>Skills</h2>
   <dl class="skills">
-    <dt>Machine learning</dt><dd>Reinforcement learning (PPO, SAC, RLHF), deep learning, preference learning, curriculum learning, statistical evaluation</dd>
+    <dt>Machine learning</dt><dd>Deep learning, computer vision, reinforcement learning (RLHF, reward modeling, curriculum design), LLMs and agentic AI, robustness to distribution shift, model quantization, experiment design and statistical evaluation</dd>
     <dt>ML frameworks</dt><dd>PyTorch, JAX / Flax / Optax, NumPy, pandas, Matplotlib, Hugging Face Datasets, TensorFlow (basic)</dd>
     <dt>Simulation &amp; RL tools</dt><dd>Gymnasium, MuJoCo, JaxMARL, XLand-MiniGrid, Weights &amp; Biases</dd>
     <dt>Languages</dt><dd>Python, Java, SQL, C++, JavaScript, Bash</dd>
-    <dt>Backend &amp; data</dt><dd>FastAPI, Flask, REST APIs, SQLite, relational databases</dd>
-    <dt>DevOps &amp; tools</dt><dd>Git, GitLab CI, Docker, Linux, Slurm, cloud GPUs, Poetry, uv, CMake, LaTeX</dd>
-    <dt>Process</dt><dd>Agile Scrum, Jira</dd>
-    <dt>Spoken</dt><dd>German, Turkish (native); English (C2)</dd>
+    <dt>Backend &amp; data</dt><dd>FastAPI, Flask, REST APIs, SQLite, PostgreSQL, MySQL</dd>
+    <dt>DevOps &amp; tools</dt><dd>Git, GitLab CI, Docker, Linux, Slurm, Google Cloud, Poetry, uv, CMake, LaTeX, Agile, Scrum, Jira</dd>
+    <dt>Spoken</dt><dd>German (native level/Abitur), English (PTE Academic C2), Turkish (native)</dd>
   </dl>
 
   <footer>Updated November 2026</footer>
